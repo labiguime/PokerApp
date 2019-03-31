@@ -1,0 +1,446 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/gradient_background"
+    tools:context=".GamePage">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:orientation="vertical">
+
+        <RelativeLayout
+            android:layout_width="211dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center">
+
+            <LinearLayout
+                android:layout_width="60dp"
+                android:layout_height="match_parent"
+                android:layout_marginRight="-60dp"
+                android:layout_toLeftOf="@id/imageViewXXX"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/imageView4sddd"
+                    android:layout_width="20dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    app:srcCompat="@drawable/backside_old" />
+
+                <ImageView
+                    android:id="@+id/imageView3sddd"
+                    android:layout_width="28dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    app:srcCompat="@drawable/backside_old" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/imageViewXXX"
+                android:layout_width="37dp"
+                android:layout_height="match_parent"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+                android:layout_marginLeft="60dp"
+                app:srcCompat="@drawable/profile_icon" />
+
+            <LinearLayout
+                android:layout_width="133dp"
+                android:layout_height="match_parent"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="0dp"
+                android:layout_toRightOf="@id/imageViewXXX"
+                android:orientation="vertical">
+
+                <Button
+                    android:id="@+id/button77"
+                    android:layout_width="wrap_content"
+                    android:layout_height="26dp"
+                    android:layout_marginBottom="-10dp"
+                    android:text="marioXYZ"
+                    android:textAllCaps="false"
+                    android:textSize="5sp" />
+
+                <Button
+                    android:id="@+id/button88"
+                    android:layout_width="wrap_content"
+                    android:layout_height="26dp"
+                    android:text="$456.000"
+                    android:textAllCaps="false"
+                    android:textSize="5sp" />
+            </LinearLayout>
+        </RelativeLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="223dp"
+        android:background="@drawable/poker_table"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="77dp"
+            android:orientation="horizontal">
+
+            <RelativeLayout
+                android:layout_width="273dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="left"
+                android:layout_marginTop="-20dp"
+                android:layout_marginLeft="50dp">
+
+                <LinearLayout
+                    android:layout_width="60dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginRight="-60dp"
+                    android:layout_toLeftOf="@id/imageViewXXsd"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/imageView4sd"
+                        android:layout_width="20dp"
+                        android:layout_height="30dp"
+                        android:layout_gravity="center"
+                        android:layout_weight="1"
+                        app:srcCompat="@drawable/backside_old" />
+
+                    <ImageView
+                        android:id="@+id/imageView3sd"
+                        android:layout_width="28dp"
+                        android:layout_height="30dp"
+                        android:layout_gravity="center"
+                        android:layout_weight="1"
+                        app:srcCompat="@drawable/backside_old" />
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/imageViewXXsd"
+                    android:layout_width="37dp"
+                    android:layout_height="match_parent"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentTop="true"
+                    android:layout_marginLeft="60dp"
+                    app:srcCompat="@drawable/profile_icon" />
+
+                <LinearLayout
+                    android:layout_width="141dp"
+                    android:layout_height="47dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginEnd="35dp"
+                    android:layout_toRightOf="@id/imageViewXXsd"
+                    android:orientation="vertical">
+
+                    <Button
+                        android:id="@+id/button7sd"
+                        android:layout_width="wrap_content"
+                        android:layout_height="26dp"
+                        android:layout_marginBottom="-10dp"
+                        android:text="leo3467"
+                        android:textAllCaps="false"
+                        android:textSize="5sp" />
+
+                    <Button
+                        android:id="@+id/button8sd"
+                        android:layout_width="wrap_content"
+                        android:layout_height="26dp"
+                        android:text="$1.500.000"
+                        android:textAllCaps="false"
+                        android:textSize="5sp" />
+
+                </LinearLayout>
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="273dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="right"
+                android:layout_marginTop="-20dp"
+                android:layout_marginLeft="100dp">
+
+                <LinearLayout
+                    android:layout_width="60dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginRight="-60dp"
+                    android:layout_toLeftOf="@id/imageViewXXsdd"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/imageView4sdd"
+                        android:layout_width="20dp"
+                        android:layout_height="30dp"
+                        android:layout_gravity="center"
+                        android:layout_weight="1"
+                        app:srcCompat="@drawable/backside_old" />
+
+                    <ImageView
+                        android:id="@+id/imageView3sdd"
+                        android:layout_width="28dp"
+                        android:layout_height="30dp"
+                        android:layout_gravity="center"
+                        android:layout_weight="1"
+                        app:srcCompat="@drawable/backside_old" />
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/imageViewXXsdd"
+                    android:layout_width="37dp"
+                    android:layout_height="match_parent"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentTop="true"
+                    android:layout_marginLeft="60dp"
+                    app:srcCompat="@drawable/profile_icon" />
+
+                <LinearLayout
+                    android:layout_width="141dp"
+                    android:layout_height="47dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginEnd="35dp"
+                    android:layout_toRightOf="@id/imageViewXXsdd"
+                    android:orientation="vertical">
+
+                    <Button
+                        android:id="@+id/button7sdd"
+                        android:layout_width="wrap_content"
+                        android:layout_height="26dp"
+                        android:layout_marginBottom="-10dp"
+                        android:text="leo3467"
+                        android:textAllCaps="false"
+                        android:textSize="5sp" />
+
+                    <Button
+                        android:id="@+id/button8sdd"
+                        android:layout_width="wrap_content"
+                        android:layout_height="26dp"
+                        android:text="$1.500.000"
+                        android:textAllCaps="false"
+                        android:textSize="5sp" />
+
+                </LinearLayout>
+            </RelativeLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="662dp"
+            android:layout_height="72dp"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="77dp"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="525dp"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="54dp"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"></LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="415dp"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="83dp"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical">
+
+                        <ImageView
+                            android:id="@+id/imageView5"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center"
+                            app:srcCompat="@drawable/king_of_clubs" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="83dp"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical">
+
+                        <ImageView
+                            android:id="@+id/imageView2"
+                            android:layout_width="44dp"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center"
+                            app:srcCompat="@drawable/ace_of_spades" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="83dp"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical">
+
+                        <ImageView
+                            android:id="@+id/imageView22"
+                            android:layout_width="44dp"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center"
+                            app:srcCompat="@drawable/king_of_hearts" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="83dp"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical">
+
+                        <ImageView
+                            android:id="@+id/imageView222"
+                            android:layout_width="44dp"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center"
+                            app:srcCompat="@drawable/c8_of_diamonds" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="83dp"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical">
+
+                        <ImageView
+                            android:id="@+id/imageView"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center"
+                            app:srcCompat="@drawable/c7_of_spades" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"></LinearLayout>
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="73dp"
+            android:orientation="vertical"></LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="125dp"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="37dp"
+            android:orientation="vertical">
+
+            <RelativeLayout
+                android:layout_width="273dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="center">
+
+                <LinearLayout
+                    android:layout_width="60dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginRight="-60dp"
+                    android:layout_toLeftOf="@id/imageViewXX"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/imageView4"
+                        android:layout_width="20dp"
+                        android:layout_height="30dp"
+                        android:layout_gravity="center"
+                        android:layout_weight="1"
+                        app:srcCompat="@drawable/c10_of_diamonds" />
+
+                    <ImageView
+                        android:id="@+id/imageView3"
+                        android:layout_width="28dp"
+                        android:layout_height="30dp"
+                        android:layout_gravity="center"
+                        android:layout_weight="1"
+                        app:srcCompat="@drawable/ace_of_clubs" />
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/imageViewXX"
+                    android:layout_width="37dp"
+                    android:layout_marginLeft="60dp"
+                    android:layout_height="match_parent"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentTop="true"
+                    app:srcCompat="@drawable/profile_icon" />
+
+                <LinearLayout
+                    android:layout_width="133dp"
+                    android:layout_height="match_parent"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginEnd="0dp"
+                    android:layout_toRightOf="@id/imageViewXX"
+                    android:orientation="vertical">
+
+                    <Button
+                        android:id="@+id/button7"
+                        android:layout_width="wrap_content"
+                        android:layout_height="26dp"
+                        android:layout_marginBottom="-10dp"
+                        android:text="leo3467"
+                        android:textAllCaps="false"
+                        android:textSize="5sp" />
+
+                    <Button
+                        android:id="@+id/button8"
+                        android:layout_width="wrap_content"
+                        android:layout_height="26dp"
+                        android:text="$1.500.000"
+                        android:textAllCaps="false"
+                        android:textSize="5sp" />
+
+                </LinearLayout>
+            </RelativeLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/button6"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="FOLD" />
+
+            <Button
+                android:id="@+id/button5"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="CHECK" />
+
+            <Button
+                android:id="@+id/button4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="CALL/RAISE" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>
