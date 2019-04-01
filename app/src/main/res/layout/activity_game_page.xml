@@ -265,8 +265,8 @@
 
                         <ImageView
                             android:id="@+id/imageView5"
-                            android:layout_width="match_parent"
                             android:layout_height="match_parent"
+                            android:layout_width="44dp"
                             android:layout_gravity="center"
                             app:srcCompat="@drawable/king_of_clubs" />
                     </LinearLayout>
@@ -317,8 +317,8 @@
 
                         <ImageView
                             android:id="@+id/imageView"
-                            android:layout_width="match_parent"
                             android:layout_height="match_parent"
+                            android:layout_width="44dp"
                             android:layout_gravity="center"
                             app:srcCompat="@drawable/c7_of_spades" />
                     </LinearLayout>
