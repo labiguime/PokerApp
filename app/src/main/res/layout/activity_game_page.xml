@@ -22,11 +22,11 @@
                 android:layout_width="60dp"
                 android:layout_height="match_parent"
                 android:layout_marginRight="-60dp"
-                android:layout_toLeftOf="@id/imageViewXXX"
+                android:layout_toLeftOf="@id/p2Avatar"
                 android:orientation="horizontal">
 
                 <ImageView
-                    android:id="@+id/imageView4sddd"
+                    android:id="@+id/p2Card2"
                     android:layout_width="20dp"
                     android:layout_height="30dp"
                     android:layout_gravity="center"
@@ -34,7 +34,7 @@
                     app:srcCompat="@drawable/backside_old" />
 
                 <ImageView
-                    android:id="@+id/imageView3sddd"
+                    android:id="@+id/p2Card1"
                     android:layout_width="28dp"
                     android:layout_height="30dp"
                     android:layout_gravity="center"
@@ -43,7 +43,7 @@
             </LinearLayout>
 
             <ImageView
-                android:id="@+id/imageViewXXX"
+                android:id="@+id/p2Avatar"
                 android:layout_width="37dp"
                 android:layout_height="match_parent"
                 android:layout_alignParentStart="true"
@@ -57,23 +57,23 @@
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
                 android:layout_marginEnd="0dp"
-                android:layout_toRightOf="@id/imageViewXXX"
+                android:layout_toRightOf="@id/p2Avatar"
                 android:orientation="vertical">
 
                 <Button
-                    android:id="@+id/button77"
+                    android:id="@+id/p2NicknameText"
                     android:layout_width="wrap_content"
                     android:layout_height="26dp"
                     android:layout_marginBottom="-10dp"
-                    android:text="marioXYZ"
+                    android:text="Player 2"
                     android:textAllCaps="false"
                     android:textSize="5sp" />
 
                 <Button
-                    android:id="@+id/button88"
+                    android:id="@+id/p2MoneyText"
                     android:layout_width="wrap_content"
                     android:layout_height="26dp"
-                    android:text="$456.000"
+                    android:text="$250.000"
                     android:textAllCaps="false"
                     android:textSize="5sp" />
             </LinearLayout>
@@ -102,11 +102,11 @@
                     android:layout_width="60dp"
                     android:layout_height="match_parent"
                     android:layout_marginRight="-60dp"
-                    android:layout_toLeftOf="@id/imageViewXXsd"
+                    android:layout_toLeftOf="@id/p3Avatar"
                     android:orientation="horizontal">
 
                     <ImageView
-                        android:id="@+id/imageView4sd"
+                        android:id="@+id/p3Card2"
                         android:layout_width="20dp"
                         android:layout_height="30dp"
                         android:layout_gravity="center"
@@ -114,7 +114,7 @@
                         app:srcCompat="@drawable/backside_old" />
 
                     <ImageView
-                        android:id="@+id/imageView3sd"
+                        android:id="@+id/p3Card1"
                         android:layout_width="28dp"
                         android:layout_height="30dp"
                         android:layout_gravity="center"
@@ -123,7 +123,7 @@
                 </LinearLayout>
 
                 <ImageView
-                    android:id="@+id/imageViewXXsd"
+                    android:id="@+id/p3Avatar"
                     android:layout_width="37dp"
                     android:layout_height="match_parent"
                     android:layout_alignParentStart="true"
@@ -137,23 +137,23 @@
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
                     android:layout_marginEnd="35dp"
-                    android:layout_toRightOf="@id/imageViewXXsd"
+                    android:layout_toRightOf="@id/p3Avatar"
                     android:orientation="vertical">
 
                     <Button
-                        android:id="@+id/button7sd"
+                        android:id="@+id/p3NicknameText"
                         android:layout_width="wrap_content"
                         android:layout_height="26dp"
                         android:layout_marginBottom="-10dp"
-                        android:text="leo3467"
+                        android:text="Player 3"
                         android:textAllCaps="false"
                         android:textSize="5sp" />
 
                     <Button
-                        android:id="@+id/button8sd"
+                        android:id="@+id/p3MoneyText"
                         android:layout_width="wrap_content"
                         android:layout_height="26dp"
-                        android:text="$1.500.000"
+                        android:text="$1.000.000"
                         android:textAllCaps="false"
                         android:textSize="5sp" />
 
@@ -171,11 +171,11 @@
                     android:layout_width="60dp"
                     android:layout_height="match_parent"
                     android:layout_marginRight="-60dp"
-                    android:layout_toLeftOf="@id/imageViewXXsdd"
+                    android:layout_toLeftOf="@id/p4Avatar"
                     android:orientation="horizontal">
 
                     <ImageView
-                        android:id="@+id/imageView4sdd"
+                        android:id="@+id/p4Card2"
                         android:layout_width="20dp"
                         android:layout_height="30dp"
                         android:layout_gravity="center"
@@ -183,7 +183,7 @@
                         app:srcCompat="@drawable/backside_old" />
 
                     <ImageView
-                        android:id="@+id/imageView3sdd"
+                        android:id="@+id/p4Card1"
                         android:layout_width="28dp"
                         android:layout_height="30dp"
                         android:layout_gravity="center"
@@ -192,7 +192,7 @@
                 </LinearLayout>
 
                 <ImageView
-                    android:id="@+id/imageViewXXsdd"
+                    android:id="@+id/p4Avatar"
                     android:layout_width="37dp"
                     android:layout_height="match_parent"
                     android:layout_alignParentStart="true"
@@ -206,23 +206,23 @@
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
                     android:layout_marginEnd="35dp"
-                    android:layout_toRightOf="@id/imageViewXXsdd"
+                    android:layout_toRightOf="@id/p4Avatar"
                     android:orientation="vertical">
 
                     <Button
-                        android:id="@+id/button7sdd"
+                        android:id="@+id/p4NicknameText"
                         android:layout_width="wrap_content"
                         android:layout_height="26dp"
                         android:layout_marginBottom="-10dp"
-                        android:text="leo3467"
+                        android:text="Player 4"
                         android:textAllCaps="false"
                         android:textSize="5sp" />
 
                     <Button
-                        android:id="@+id/button8sdd"
+                        android:id="@+id/p4MoneyText"
                         android:layout_width="wrap_content"
                         android:layout_height="26dp"
-                        android:text="$1.500.000"
+                        android:text="$1.250.000"
                         android:textAllCaps="false"
                         android:textSize="5sp" />
 
@@ -264,7 +264,7 @@
                         android:orientation="vertical">
 
                         <ImageView
-                            android:id="@+id/imageView5"
+                            android:id="@+id/tableCard5"
                             android:layout_height="match_parent"
                             android:layout_width="44dp"
                             android:layout_gravity="center"
@@ -277,7 +277,7 @@
                         android:orientation="vertical">
 
                         <ImageView
-                            android:id="@+id/imageView2"
+                            android:id="@+id/tableCard1"
                             android:layout_width="44dp"
                             android:layout_height="match_parent"
                             android:layout_gravity="center"
@@ -290,7 +290,7 @@
                         android:orientation="vertical">
 
                         <ImageView
-                            android:id="@+id/imageView22"
+                            android:id="@+id/tableCard2"
                             android:layout_width="44dp"
                             android:layout_height="match_parent"
                             android:layout_gravity="center"
@@ -303,7 +303,7 @@
                         android:orientation="vertical">
 
                         <ImageView
-                            android:id="@+id/imageView222"
+                            android:id="@+id/tableCard3"
                             android:layout_width="44dp"
                             android:layout_height="match_parent"
                             android:layout_gravity="center"
@@ -316,7 +316,7 @@
                         android:orientation="vertical">
 
                         <ImageView
-                            android:id="@+id/imageView"
+                            android:id="@+id/tableCard4"
                             android:layout_height="match_parent"
                             android:layout_width="44dp"
                             android:layout_gravity="center"
@@ -357,11 +357,11 @@
                     android:layout_width="60dp"
                     android:layout_height="match_parent"
                     android:layout_marginRight="-60dp"
-                    android:layout_toLeftOf="@id/imageViewXX"
+                    android:layout_toLeftOf="@id/userAvatar"
                     android:orientation="horizontal">
 
                     <ImageView
-                        android:id="@+id/imageView4"
+                        android:id="@+id/userCard2"
                         android:layout_width="20dp"
                         android:layout_height="30dp"
                         android:layout_gravity="center"
@@ -369,7 +369,7 @@
                         app:srcCompat="@drawable/c10_of_diamonds" />
 
                     <ImageView
-                        android:id="@+id/imageView3"
+                        android:id="@+id/userCard1"
                         android:layout_width="28dp"
                         android:layout_height="30dp"
                         android:layout_gravity="center"
@@ -378,7 +378,7 @@
                 </LinearLayout>
 
                 <ImageView
-                    android:id="@+id/imageViewXX"
+                    android:id="@+id/userAvatar"
                     android:layout_width="37dp"
                     android:layout_marginLeft="60dp"
                     android:layout_height="match_parent"
@@ -392,23 +392,25 @@
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
                     android:layout_marginEnd="0dp"
-                    android:layout_toRightOf="@id/imageViewXX"
+                    android:layout_toRightOf="@id/userAvatar"
                     android:orientation="vertical">
 
                     <Button
-                        android:id="@+id/button7"
+                        android:id="@+id/userNicknameText"
                         android:layout_width="wrap_content"
                         android:layout_height="26dp"
                         android:layout_marginBottom="-10dp"
-                        android:text="leo3467"
+                        android:text="User"
+                        android:clickable="false"
                         android:textAllCaps="false"
                         android:textSize="5sp" />
 
                     <Button
-                        android:id="@+id/button8"
+                        android:id="@+id/userMoneyText"
                         android:layout_width="wrap_content"
                         android:layout_height="26dp"
                         android:text="$1.500.000"
+                        android:clickable="false"
                         android:textAllCaps="false"
                         android:textSize="5sp" />
 
