@@ -47,7 +47,9 @@ public class HomePage extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(),"Your nickname is too long!",Toast.LENGTH_SHORT).show();
                 }
                 else {
-                    myIntent.putExtra("avatar", avatarPictureId);
+                    avatarPictureId = avatarPictureId+1;
+                    String avatarFileName = "avatar" + Integer.toString(avatarPictureId);
+                    myIntent.putExtra("avatar", avatarFileName);
                     myIntent.putExtra("nickname", nickname);
                     startActivity(myIntent);
                 }
