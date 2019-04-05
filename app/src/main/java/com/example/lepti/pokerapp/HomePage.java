@@ -30,7 +30,7 @@ public class HomePage extends AppCompatActivity {
     ImageView avatarPicture;
     EditText nicknameTextBox;
     Button changePictureButton;
-
+    int playerSpot = -1;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,8 +85,31 @@ public class HomePage extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
+
+
+// Attach a listener to read the data at our posts reference
+               /*
+                               FirebaseDatabase database = FirebaseDatabase.getInstance();
+                DatabaseReference ref = database.getReference("server/saving-data/fireblog/posts");
+               ref.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        Post post = dataSnapshot.getValue(Post.class);
+                        System.out.println(post);
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        System.out.println("The read failed: " + databaseError.getCode());
+                    }
+                });*/
+
+               // testFunction();
+
+
                 Intent myIntent = new Intent(HomePage.this, GamePage.class);
                 String nickname = nicknameTextBox.getText().toString();
+
                 if(nickname.isEmpty()) {
                     Toast.makeText(getApplicationContext(),"You must choose a nickname!",Toast.LENGTH_SHORT).show();
                 }
@@ -94,11 +117,7 @@ public class HomePage extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(),"Your nickname is too long!",Toast.LENGTH_SHORT).show();
                 }
                 else {
-                    avatarPictureId = avatarPictureId+1;
-                    String avatarFileName = "avatar" + Integer.toString(avatarPictureId);
-                    myIntent.putExtra("avatar", avatarFileName);
-                    myIntent.putExtra("nickname", nickname);
-                    startActivity(myIntent);
+                    lookForSpot(0,0, true);
                 }
 
             }
@@ -114,5 +133,73 @@ public class HomePage extends AppCompatActivity {
                 avatarPicture.setImageResource(resID);
             }
         });
+    }
+    private void testFunction()
+    {
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        final Integer[] spotAvailable = new Integer[1];
+        String path = "game-1/table-spots/spot-" + Integer.toString(0);
+        Log.d("SPOT", "CHECKING PATH" + path);
+        DatabaseReference ref = database.getReference(path);
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Log.d("SPOT", "Inside");
+                spotAvailable[0] = dataSnapshot.getValue(Integer.class);
+                Log.d("SPOT", "Reached here");
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.d("VAR", "CANCELLED");
+            }
+        });
+    }
+    private void joinGame() {
+        Intent myIntent = new Intent(HomePage.this, GamePage.class);
+        String nickname = nicknameTextBox.getText().toString();
+        avatarPictureId = avatarPictureId+1;
+        String avatarFileName = "avatar" + Integer.toString(avatarPictureId);
+        myIntent.putExtra("avatar", avatarFileName);
+        myIntent.putExtra("nickname", nickname);
+        myIntent.putExtra("playerSpot", playerSpot);
+        startActivity(myIntent);
+    }
+
+
+
+    private void lookForSpot(final int spotId, Integer spotChecked, boolean checkNext) {
+        if(checkNext) {
+            FirebaseDatabase database = FirebaseDatabase.getInstance();
+            final Integer[] spotAvailable = new Integer[1];
+            String path = "game-1/table-spots/spot-" + Integer.toString(spotId);
+            DatabaseReference ref = database.getReference(path);
+            ref.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    spotAvailable[0] = dataSnapshot.getValue(Integer.class);
+                    lookForSpot(spotId, spotAvailable[0], false);
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                    lookForSpot(spotId, 0, false);
+                }
+            });
+        }
+        else {
+            if(spotChecked == 1) {
+                playerSpot = spotId;
+                joinGame();
+            }
+            else {
+                if(spotId == 3) {
+                    playerSpot = -2; // no spot found
+                }
+                else {
+                    lookForSpot(spotId+1, spotChecked, true);
+                }
+            }
+        }
     }
 }

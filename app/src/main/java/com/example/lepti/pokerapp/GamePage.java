@@ -6,6 +6,7 @@ import android.content.pm.ActivityInfo;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -31,6 +32,7 @@ public class GamePage extends AppCompatActivity {
 
     String userNicknameExtra;
     String userAvatarExtra;
+    int playerSpot;
     ImageView userAvatar;
     Button userNicknameText;
     ImageView userCard1View;
@@ -73,6 +75,7 @@ public class GamePage extends AppCompatActivity {
         if (extras != null) {
             userNicknameExtra = extras.getString("nickname");
             userAvatarExtra = extras.getString("avatar");
+            playerSpot = extras.getInt("playerSpot");
         }
         int resID = getResources().getIdentifier(userAvatarExtra, "drawable", "com.example.lepti.pokerapp");
         userAvatar.setImageResource(resID);
@@ -90,7 +93,7 @@ public class GamePage extends AppCompatActivity {
         checkButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(playerTurn == 0) {
+                /*if(playerTurn == 0) {
                     if(individualBet != 0) {
                         Toast.makeText(GamePage.this, "You cannot check because there is a bet on the table.", LENGTH_SHORT).show();
                     }
@@ -113,7 +116,7 @@ public class GamePage extends AppCompatActivity {
                     });
                     AlertDialog dialog = builder.create();
                     dialog.show();
-                }
+                }*/
 
             }
         });
