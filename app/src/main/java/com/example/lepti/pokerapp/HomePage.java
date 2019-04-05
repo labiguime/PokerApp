@@ -41,6 +41,42 @@ public class HomePage extends AppCompatActivity {
         avatarPicture = (ImageView) findViewById(R.id.avatarPicture);
         fromtop = AnimationUtils.loadAnimation(this, R.anim.fromtop);
 
+      /*
+        // INITIALIZE GAME
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference myRef = database.getReference("game-1/table-spots/spot-0");
+        myRef.setValue("0");
+        myRef = database.getReference("game-1/table-spots/spot-1");
+        myRef.setValue("0");
+        myRef = database.getReference("game-1/table-spots/spot-2");
+        myRef.setValue("0");
+        myRef = database.getReference("game-1/table-spots/spot-3");
+        myRef.setValue("0");
+
+        myRef = database.getReference("game-1/variables/playerTurn");
+        myRef.setValue("0");
+
+        myRef = database.getReference("game-1/variables/totalBet");
+        myRef.setValue("0");
+
+        myRef = database.getReference("game-1/variables/roundBet");
+        myRef.setValue("0");
+
+        myRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                // This method is called once with the initial value and again
+                // whenever data at this location is updated.
+                String value = dataSnapshot.getValue(String.class);
+                Log.d("TRUC:", "Value is: " + value);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                // Failed to read value
+                Log.w("TRUC:", "Failed to read value.", error.toException());
+            }
+        });*/
 
 
         app_logo.setAnimation(fromtop);
@@ -48,25 +84,6 @@ public class HomePage extends AppCompatActivity {
         join_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                FirebaseDatabase database = FirebaseDatabase.getInstance();
-                Log.d("TRUC:","db ref: "+database.getReference());
-                DatabaseReference myRef = database.getReference("playerTurn");
-                myRef.setValue("1");
-                myRef.addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        // This method is called once with the initial value and again
-                        // whenever data at this location is updated.
-                        String value = dataSnapshot.getValue(String.class);
-                        Log.d("TRUC:", "Value is: " + value);
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError error) {
-                        // Failed to read value
-                        Log.w("TRUC:", "Failed to read value.", error.toException());
-                    }
-                });
 
                 Intent myIntent = new Intent(HomePage.this, GamePage.class);
                 String nickname = nicknameTextBox.getText().toString();
