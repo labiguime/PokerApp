@@ -13,6 +13,11 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,13 +33,15 @@ import java.util.Set;
 
 import static android.widget.Toast.LENGTH_SHORT;
 
+import classes.GameVariables;
+import classes.PlayerVariables;
+
 public class GamePage extends AppCompatActivity {
 
-    String userNicknameExtra;
-    String userAvatarExtra;
-    int playerSpot;
+    int userSpot;
     ImageView userAvatar;
     Button userNicknameText;
+    Button readyButton;
     ImageView userCard1View;
     ImageView userCard2View;
     ImageView tableCard1View;
@@ -43,6 +50,8 @@ public class GamePage extends AppCompatActivity {
     ImageView tableCard4View;
     ImageView tableCard5View;
     Button checkButton;
+
+
     int playerTurn = 0;
     int currId = 2;
     int[][] playerCards = new int[4][7];
@@ -52,14 +61,22 @@ public class GamePage extends AppCompatActivity {
     int individualBet = 0;
     int totalPlayers = 1;
     ArrayList<Integer> cardsInUse  = new ArrayList<Integer>();
-    // Write a message to the database
 
+    int readyPlayers = 0;
+    int numberPlayers = 0;
+
+    PlayerVariables user;
+    GameVariables gVars;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game_page);
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+
+        /* Assigning a variable to each view */
         userAvatar = findViewById(R.id.userAvatar);
         userNicknameText = findViewById(R.id.userNicknameText);
         checkButton = findViewById(R.id.checkButton);
@@ -71,15 +88,50 @@ public class GamePage extends AppCompatActivity {
         tableCard4View = findViewById(R.id.tableCard4);
         tableCard5View = findViewById(R.id.tableCard5);
         foldButton = findViewById(R.id.foldButton);
+        readyButton = findViewById(R.id.readyButton);
+
+        /* Recovering the extras */
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
-            userNicknameExtra = extras.getString("nickname");
-            userAvatarExtra = extras.getString("avatar");
-            playerSpot = extras.getInt("playerSpot");
+            user = new PlayerVariables(extras.getString("nickname"), extras.getString("avatar"));
+            userSpot = extras.getInt("playerSpot");
         }
-        int resID = getResources().getIdentifier(userAvatarExtra, "drawable", "com.example.lepti.pokerapp");
+
+        /* Setting up the UI */
+        int resID = getResources().getIdentifier(user.getAvatar(), "drawable", "com.example.lepti.pokerapp");
         userAvatar.setImageResource(resID);
-        userNicknameText.setText(userNicknameExtra);
+        userNicknameText.setText(user.getNickname());
+        foldButton.setVisibility(View.GONE);
+        checkButton.setVisibility(View.GONE);
+        readyButton.setVisibility(View.VISIBLE);
+
+
+        /* Keep global variables up-to-date */
+        DatabaseReference gameVariables = database.getReference("game-1/variables");
+        ValueEventListener gameVariablesListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                gVars = dataSnapshot.getValue(GameVariables.class);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.w("TAG", "loadPost:onCancelled", databaseError.toException());
+            }
+        };
+        gameVariables.addValueEventListener(gameVariablesListener);
+
+        readyButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                gVars.setReadyPlayers(gVars.getReadyPlayers()+1);
+                readyButton.setVisibility(View.GONE);
+                if(gVars.getReadyPlayers() == gVars.getNumberPlayers() && gVars.getNumberPlayers() > 1) {
+                    // we can start the game
+                }
+            }
+        });
+
         PokerPhase(0);
 
         foldButton.setOnClickListener(new View.OnClickListener() {
