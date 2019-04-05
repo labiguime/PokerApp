@@ -16,6 +16,12 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
 public class HomePage extends AppCompatActivity {
     ImageView app_logo;
     Animation fromtop;
@@ -24,6 +30,7 @@ public class HomePage extends AppCompatActivity {
     ImageView avatarPicture;
     EditText nicknameTextBox;
     Button changePictureButton;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,11 +40,34 @@ public class HomePage extends AppCompatActivity {
         changePictureButton = findViewById(R.id.changePictureButton);
         avatarPicture = (ImageView) findViewById(R.id.avatarPicture);
         fromtop = AnimationUtils.loadAnimation(this, R.anim.fromtop);
+
+
+
         app_logo.setAnimation(fromtop);
         join_button = findViewById(R.id.joinGameButton);
         join_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                FirebaseDatabase database = FirebaseDatabase.getInstance();
+                Log.d("TRUC:","db ref: "+database.getReference());
+                DatabaseReference myRef = database.getReference("playerTurn");
+                myRef.setValue("1");
+                myRef.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        // This method is called once with the initial value and again
+                        // whenever data at this location is updated.
+                        String value = dataSnapshot.getValue(String.class);
+                        Log.d("TRUC:", "Value is: " + value);
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError error) {
+                        // Failed to read value
+                        Log.w("TRUC:", "Failed to read value.", error.toException());
+                    }
+                });
+
                 Intent myIntent = new Intent(HomePage.this, GamePage.class);
                 String nickname = nicknameTextBox.getText().toString();
                 if(nickname.isEmpty()) {

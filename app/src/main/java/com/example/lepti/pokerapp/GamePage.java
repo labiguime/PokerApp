@@ -1,12 +1,17 @@
 package com.example.lepti.pokerapp;
 
+
+import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
+
+
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,7 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.TreeMap;
+
+import static android.widget.Toast.LENGTH_SHORT;
 
 public class GamePage extends AppCompatActivity {
 
@@ -34,11 +40,19 @@ public class GamePage extends AppCompatActivity {
     ImageView tableCard3View;
     ImageView tableCard4View;
     ImageView tableCard5View;
+    Button checkButton;
+    int playerTurn = 0;
     int currId = 2;
     int[][] playerCards = new int[4][7];
     Button foldButton;
     int phase = 1;
+    int totalBet = 0;
+    int individualBet = 0;
+    int totalPlayers = 1;
     ArrayList<Integer> cardsInUse  = new ArrayList<Integer>();
+    // Write a message to the database
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,6 +60,7 @@ public class GamePage extends AppCompatActivity {
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         userAvatar = findViewById(R.id.userAvatar);
         userNicknameText = findViewById(R.id.userNicknameText);
+        checkButton = findViewById(R.id.checkButton);
         userCard1View = findViewById(R.id.userCard1);
         userCard2View = findViewById(R.id.userCard2);
         tableCard1View = findViewById(R.id.tableCard1);
@@ -63,6 +78,7 @@ public class GamePage extends AppCompatActivity {
         userAvatar.setImageResource(resID);
         userNicknameText.setText(userNicknameExtra);
         PokerPhase(0);
+
         foldButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -70,6 +86,47 @@ public class GamePage extends AppCompatActivity {
                 phase++;
             }
         });
+
+        checkButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(playerTurn == 0) {
+                    if(individualBet != 0) {
+                        Toast.makeText(GamePage.this, "You cannot check because there is a bet on the table.", LENGTH_SHORT).show();
+                    }
+                    AlertDialog.Builder builder = new AlertDialog.Builder(GamePage.this);
+                    builder.setMessage("Do you really want to check?").setTitle("Action");
+
+                    builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                            Toast.makeText(GamePage.this, "You checked!", LENGTH_SHORT).show();
+                            // call next turn
+                        }
+                    });
+                    builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                        }
+                    });
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
+                }
+
+            }
+        });
+    }
+    private void nextTurn() {
+        if(playerTurn == totalPlayers-1) {
+            // Call next phase
+        }
+        else {
+            playerTurn++;
+            // send message to the player in question
+        }
+        return;
     }
     private String generateCard(int forced1, int forced2)
     {
@@ -237,11 +294,11 @@ public class GamePage extends AppCompatActivity {
             }
             case 1:
             {
-                String Card1 = generateCard(2, 3);
+                String Card1 = generateCard(-1, -1);
                 currId = 3;
-                String Card2 = generateCard(1, 12);
+                String Card2 = generateCard(-1, -1);
                 currId = 4;
-                String Card3 = generateCard(1, 11);
+                String Card3 = generateCard(-1, -1);
                 int resID = getResources().getIdentifier(Card1, "drawable", "com.example.lepti.pokerapp");
                 tableCard1View.setImageResource(resID);
                 resID = getResources().getIdentifier(Card2, "drawable", "com.example.lepti.pokerapp");
@@ -253,8 +310,8 @@ public class GamePage extends AppCompatActivity {
             case 2:
             {
 
-                String Card1 = generatePlayerCards(0, 0, 1, 10);
-                String Card2 = generatePlayerCards(0, 1, 1, 9);
+                String Card1 = generatePlayerCards(0, 0, -1, -1);
+                String Card2 = generatePlayerCards(0, 1, -1, -1);
                 int resID = getResources().getIdentifier(Card1, "drawable", "com.example.lepti.pokerapp");
                 userCard1View.setImageResource(resID);
                 resID = getResources().getIdentifier(Card2, "drawable", "com.example.lepti.pokerapp");
@@ -264,7 +321,7 @@ public class GamePage extends AppCompatActivity {
             case 3:
             {
                 currId = 5;
-                String Card1 = generateCard(1, 8);
+                String Card1 = generateCard(-1, -1);
                 int resID = getResources().getIdentifier(Card1, "drawable", "com.example.lepti.pokerapp");
                 tableCard4View.setImageResource(resID);
                 break;
@@ -272,7 +329,7 @@ public class GamePage extends AppCompatActivity {
             case 4:
             {
                 currId = 6;
-                String Card1 = generateCard(3, 8);
+                String Card1 = generateCard(-1, -1);
                 int resID = getResources().getIdentifier(Card1, "drawable", "com.example.lepti.pokerapp");
                 tableCard5View.setImageResource(resID);
                 break;
@@ -438,7 +495,7 @@ public class GamePage extends AppCompatActivity {
                 else if(!results.equals("Four of a Kind") && !results.equals("Full House") && highestStraight != -1) {
                     results = "Straight";
                 }
-                Toast.makeText(getApplicationContext(),results,Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(),results,LENGTH_SHORT).show();
             }
         }
         return 1;

@@ -1,0 +1,35 @@
+{
+  "project_info": {
+    "project_number": "91325808431",
+    "firebase_url": "https://poker-game-767b4.firebaseio.com",
+    "project_id": "poker-game-767b4",
+    "storage_bucket": "poker-game-767b4.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:91325808431:android:7be53e69169c7d2e",
+        "android_client_info": {
+          "package_name": "com.example.lepti.pokerapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAzDS4a6UjYb_HNN3qd6OWjGEbKZ3iVYac"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "91325808431-0rpgl7th760ht6h0qk3lsktesaf0kdic.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
