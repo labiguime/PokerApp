@@ -4,16 +4,46 @@ public class PlayerVariables {
     String bestHandName;
     String nickname;
     String avatar;
-    int[] cards = new int[2];
+    int card1;
+    int card2;
     int money;
+
+    public PlayerVariables() {
+        this.nickname = "Nobody";
+        this.avatar = "profile_icon";
+        bestHandName = "No Pair";
+        card1 = -1;
+        card2 = -1;
+        money = 10000;
+    }
 
     public PlayerVariables(String nickname, String avatar) {
         this.nickname = nickname;
         this.avatar = avatar;
         bestHandName = "No Pair";
-        cards[0] = -1;
-        cards[1] = -1;
+        card1 = -1;
+        card2 = -1;
         money = 10000;
+    }
+
+    public int getCard1() {
+        return card1;
+    }
+
+    public void setCard1(int card1) {
+        this.card1 = card1;
+    }
+
+    public int getCard2() {
+        return card2;
+    }
+
+    public void setCard2(int card2) {
+        this.card2 = card2;
+    }
+
+    public int getMoney() {
+        return money;
     }
 
     public void setBestHandName(String bestHandName) {
@@ -26,10 +56,6 @@ public class PlayerVariables {
 
     public void setAvatar(String avatar) {
         this.avatar = avatar;
-    }
-
-    public void setCards(int[] cards) {
-        this.cards = cards;
     }
 
     public void setMoney(int money) {
@@ -46,13 +72,5 @@ public class PlayerVariables {
 
     public String getAvatar() {
         return avatar;
-    }
-
-    public int[] getCards() {
-        return cards;
-    }
-
-    public int getMoney() {
-        return money;
     }
 }

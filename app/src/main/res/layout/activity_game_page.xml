@@ -14,6 +14,7 @@
         android:orientation="vertical">
 
         <RelativeLayout
+            android:id="@+id/layout_player_1"
             android:layout_width="211dp"
             android:layout_height="match_parent"
             android:layout_gravity="center">
@@ -92,6 +93,7 @@
             android:orientation="horizontal">
 
             <RelativeLayout
+                android:id="@+id/layout_player_2"
                 android:layout_width="273dp"
                 android:layout_height="match_parent"
                 android:layout_gravity="left"
@@ -161,6 +163,7 @@
             </RelativeLayout>
 
             <RelativeLayout
+                android:id="@+id/layout_player_3"
                 android:layout_width="273dp"
                 android:layout_height="match_parent"
                 android:layout_gravity="right"
@@ -356,6 +359,7 @@
             android:orientation="vertical">
 
             <RelativeLayout
+                android:id="@+id/layout_player_0"
                 android:layout_width="273dp"
                 android:layout_height="match_parent"
                 android:layout_gravity="center">

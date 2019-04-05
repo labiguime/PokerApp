@@ -3,6 +3,7 @@ package com.example.lepti.pokerapp;
 
 import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -10,6 +11,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 
@@ -42,6 +44,11 @@ public class GamePage extends AppCompatActivity {
     ImageView userAvatar;
     Button userNicknameText;
     Button readyButton;
+
+    ImageView[] pAvatar = new ImageView[3];
+    Button[] pNicknameText = new Button[3];
+    Button[] pMoneyText = new Button[3];
+
     ImageView userCard1View;
     ImageView userCard2View;
     ImageView tableCard1View;
@@ -49,6 +56,7 @@ public class GamePage extends AppCompatActivity {
     ImageView tableCard3View;
     ImageView tableCard4View;
     ImageView tableCard5View;
+    RelativeLayout[] playerAvatarLayout = new RelativeLayout[4];
     Button checkButton;
 
 
@@ -77,6 +85,18 @@ public class GamePage extends AppCompatActivity {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
 
         /* Assigning a variable to each view */
+        pAvatar[0] = findViewById(R.id.p2Avatar);
+        pAvatar[1] = findViewById(R.id.p3Avatar);
+        pAvatar[2] = findViewById(R.id.p4Avatar);
+
+        pNicknameText[0] = findViewById(R.id.p2NicknameText);
+        pNicknameText[1] = findViewById(R.id.p3NicknameText);
+        pNicknameText[2] = findViewById(R.id.p4NicknameText);
+
+        pMoneyText[0] = findViewById(R.id.p2MoneyText);
+        pMoneyText[1] = findViewById(R.id.p3MoneyText);
+        pMoneyText[2] = findViewById(R.id.p4MoneyText);
+
         userAvatar = findViewById(R.id.userAvatar);
         userNicknameText = findViewById(R.id.userNicknameText);
         checkButton = findViewById(R.id.checkButton);
@@ -87,6 +107,10 @@ public class GamePage extends AppCompatActivity {
         tableCard3View = findViewById(R.id.tableCard3);
         tableCard4View = findViewById(R.id.tableCard4);
         tableCard5View = findViewById(R.id.tableCard5);
+        playerAvatarLayout[0] = findViewById(R.id.layout_player_0);
+        playerAvatarLayout[1] = findViewById(R.id.layout_player_1);
+        playerAvatarLayout[2] = findViewById(R.id.layout_player_2);
+        playerAvatarLayout[3] = findViewById(R.id.layout_player_3);
         foldButton = findViewById(R.id.foldButton);
         readyButton = findViewById(R.id.readyButton);
 
@@ -95,6 +119,8 @@ public class GamePage extends AppCompatActivity {
         if (extras != null) {
             user = new PlayerVariables(extras.getString("nickname"), extras.getString("avatar"));
             userSpot = extras.getInt("playerSpot");
+            DatabaseReference playerVariables = database.getReference("game-1/player-variables/"+Integer.toString(userSpot));
+            playerVariables.setValue(user);
         }
 
         /* Setting up the UI */
@@ -104,6 +130,10 @@ public class GamePage extends AppCompatActivity {
         foldButton.setVisibility(View.GONE);
         checkButton.setVisibility(View.GONE);
         readyButton.setVisibility(View.VISIBLE);
+        playerAvatarLayout[0].setVisibility(View.VISIBLE);
+        playerAvatarLayout[1].setVisibility(View.GONE);
+        playerAvatarLayout[2].setVisibility(View.GONE);
+        playerAvatarLayout[3].setVisibility(View.GONE);
 
 
         /* Keep global variables up-to-date */
@@ -121,6 +151,25 @@ public class GamePage extends AppCompatActivity {
         };
         gameVariables.addValueEventListener(gameVariablesListener);
 
+        /* Keep track of the players */
+        DatabaseReference gameSpots = database.getReference("game-1/free-spots");
+        gameSpots.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    if(!snapshot.getValue(Boolean.class))
+                        hidePlayerAvatar(Integer.parseInt(snapshot.getKey()));
+                    else
+                        showPlayerAvatar(Integer.parseInt(snapshot.getKey()));
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
         readyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -128,6 +177,7 @@ public class GamePage extends AppCompatActivity {
                 readyButton.setVisibility(View.GONE);
                 if(gVars.getReadyPlayers() == gVars.getNumberPlayers() && gVars.getNumberPlayers() > 1) {
                     // we can start the game
+                    // remove value event listener for players
                 }
             }
         });
@@ -257,6 +307,37 @@ public class GamePage extends AppCompatActivity {
         cardsInUse.add(number);
         playerCards[0][currId] = number;
         return (rank+suit);
+    }
+
+    private void showPlayerAvatar(int playerId) {
+        final int layoutId = (playerId+userSpot)%4;
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference pReference = database.getReference("game-1/player-variables/"+Integer.toString(playerId));
+        pReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                PlayerVariables layoutPlayerVariables = dataSnapshot.getValue(PlayerVariables.class);
+
+                /* Change the layout with the user's information*/
+                pMoneyText[layoutId-1].setText(Integer.toString(layoutPlayerVariables.getMoney()));
+                pNicknameText[layoutId-1].setText(layoutPlayerVariables.getNickname());
+                int resID = getResources().getIdentifier(layoutPlayerVariables.getAvatar(), "drawable", "com.example.lepti.pokerapp");
+                pAvatar[layoutId-1].setImageResource(resID);
+
+                /* Show the avatar */
+                playerAvatarLayout[layoutId].setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.w("TAG", "loadPost:onCancelled", databaseError.toException());
+            }
+        });
+    }
+
+    private void hidePlayerAvatar(int playerId) {
+        int layoutId = (playerId+userSpot)%4;
+        playerAvatarLayout[layoutId].setVisibility(View.GONE);
     }
     private String generatePlayerCards(int playerid, int cardid, int forced1, int forced2)
     {

@@ -2,6 +2,7 @@ package com.example.lepti.pokerapp;
 
 import android.content.Intent;
 import android.media.Image;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.CardView;
@@ -22,6 +23,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class HomePage extends AppCompatActivity {
     ImageView app_logo;
     Animation fromtop;
@@ -30,7 +34,8 @@ public class HomePage extends AppCompatActivity {
     ImageView avatarPicture;
     EditText nicknameTextBox;
     Button changePictureButton;
-    int playerSpot = -1;
+    Map<String, Boolean> freeSpots = new HashMap<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,71 +46,12 @@ public class HomePage extends AppCompatActivity {
         avatarPicture = (ImageView) findViewById(R.id.avatarPicture);
         fromtop = AnimationUtils.loadAnimation(this, R.anim.fromtop);
 
-      /*
-        // INITIALIZE GAME
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference myRef = database.getReference("game-1/table-spots/spot-0");
-        myRef.setValue("0");
-        myRef = database.getReference("game-1/table-spots/spot-1");
-        myRef.setValue("0");
-        myRef = database.getReference("game-1/table-spots/spot-2");
-        myRef.setValue("0");
-        myRef = database.getReference("game-1/table-spots/spot-3");
-        myRef.setValue("0");
-
-        myRef = database.getReference("game-1/variables/playerTurn");
-        myRef.setValue("0");
-
-        myRef = database.getReference("game-1/variables/totalBet");
-        myRef.setValue("0");
-
-        myRef = database.getReference("game-1/variables/roundBet");
-        myRef.setValue("0");
-
-        myRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                // This method is called once with the initial value and again
-                // whenever data at this location is updated.
-                String value = dataSnapshot.getValue(String.class);
-                Log.d("TRUC:", "Value is: " + value);
-            }
-
-            @Override
-            public void onCancelled(DatabaseError error) {
-                // Failed to read value
-                Log.w("TRUC:", "Failed to read value.", error.toException());
-            }
-        });*/
-
 
         app_logo.setAnimation(fromtop);
         join_button = findViewById(R.id.joinGameButton);
         join_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-
-
-// Attach a listener to read the data at our posts reference
-               /*
-                               FirebaseDatabase database = FirebaseDatabase.getInstance();
-                DatabaseReference ref = database.getReference("server/saving-data/fireblog/posts");
-               ref.addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        Post post = dataSnapshot.getValue(Post.class);
-                        System.out.println(post);
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        System.out.println("The read failed: " + databaseError.getCode());
-                    }
-                });*/
-
-               // testFunction();
-
 
                 Intent myIntent = new Intent(HomePage.this, GamePage.class);
                 String nickname = nicknameTextBox.getText().toString();
@@ -117,7 +63,23 @@ public class HomePage extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(),"Your nickname is too long!",Toast.LENGTH_SHORT).show();
                 }
                 else {
-                    lookForSpot(0,0, true);
+                    FirebaseDatabase database = FirebaseDatabase.getInstance();
+                    DatabaseReference myRef = database.getReference("game-1/free-spots");
+                    myRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            freeSpots.clear();
+                            for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                freeSpots.put(snapshot.getKey(), snapshot.getValue(Boolean.class));
+                            }
+                            joinGame(checkFreeSpots());
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                            joinGame(-1);
+                        }
+                    });
                 }
 
             }
@@ -134,72 +96,33 @@ public class HomePage extends AppCompatActivity {
             }
         });
     }
-    private void testFunction()
-    {
+    private void joinGame(int gameSpot) {
+        if(gameSpot == -1) {
+            // Cannot join the game
+            return;
+        }
         FirebaseDatabase database = FirebaseDatabase.getInstance();
-        final Integer[] spotAvailable = new Integer[1];
-        String path = "game-1/table-spots/spot-" + Integer.toString(0);
-        Log.d("SPOT", "CHECKING PATH" + path);
-        DatabaseReference ref = database.getReference(path);
-        ref.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.d("SPOT", "Inside");
-                spotAvailable[0] = dataSnapshot.getValue(Integer.class);
-                Log.d("SPOT", "Reached here");
-            }
+        DatabaseReference reference = database.getReference("game-1/free-spots");
+        reference.setValue(freeSpots);
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.d("VAR", "CANCELLED");
-            }
-        });
-    }
-    private void joinGame() {
         Intent myIntent = new Intent(HomePage.this, GamePage.class);
         String nickname = nicknameTextBox.getText().toString();
         avatarPictureId = avatarPictureId+1;
         String avatarFileName = "avatar" + Integer.toString(avatarPictureId);
         myIntent.putExtra("avatar", avatarFileName);
         myIntent.putExtra("nickname", nickname);
-        myIntent.putExtra("playerSpot", playerSpot);
+        myIntent.putExtra("playerSpot", gameSpot);
         startActivity(myIntent);
     }
 
 
-
-    private void lookForSpot(final int spotId, Integer spotChecked, boolean checkNext) {
-        if(checkNext) {
-            FirebaseDatabase database = FirebaseDatabase.getInstance();
-            final Integer[] spotAvailable = new Integer[1];
-            String path = "game-1/table-spots/spot-" + Integer.toString(spotId);
-            DatabaseReference ref = database.getReference(path);
-            ref.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    spotAvailable[0] = dataSnapshot.getValue(Integer.class);
-                    lookForSpot(spotId, spotAvailable[0], false);
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-                    lookForSpot(spotId, 0, false);
-                }
-            });
-        }
-        else {
-            if(spotChecked == 1) {
-                playerSpot = spotId;
-                joinGame();
-            }
-            else {
-                if(spotId == 3) {
-                    playerSpot = -2; // no spot found
-                }
-                else {
-                    lookForSpot(spotId+1, spotChecked, true);
-                }
+    private int checkFreeSpots() {
+        for (Map.Entry<String, Boolean> entry : freeSpots.entrySet()) {
+            if(entry.getValue()) {
+                entry.setValue(false);
+                return Integer.parseInt(entry.getKey());
             }
         }
+        return -1;
     }
 }
