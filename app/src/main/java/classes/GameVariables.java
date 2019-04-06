@@ -9,6 +9,7 @@ public class GameVariables {
     int playersCompeting;
     int currentRound;
     int currentlyCompeting;
+    Boolean hasSomeonePlayed;
 
     public GameVariables() {
         roundBet = 0;
@@ -19,6 +20,7 @@ public class GameVariables {
         playersCompeting = 0;
         currentRound = 0;
         currentlyCompeting = 0;
+        hasSomeonePlayed = false;
     }
 
     public int getCurrentRound() {
@@ -47,6 +49,14 @@ public class GameVariables {
 
     public int getCurrentlyCompeting() {
         return currentlyCompeting;
+    }
+
+    public Boolean getHasSomeonePlayed() {
+        return hasSomeonePlayed;
+    }
+
+    public void setHasSomeonePlayed(Boolean hasSomeonePlayed) {
+        this.hasSomeonePlayed = hasSomeonePlayed;
     }
 
     public void setCurrentlyCompeting(int currentlyCompeting) {

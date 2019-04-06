@@ -27,12 +27,14 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.TreeSet;
 
 import static android.widget.Toast.LENGTH_SHORT;
 
@@ -50,7 +52,7 @@ public class GamePage extends AppCompatActivity {
     ImageView[] pAvatar = new ImageView[3];
     Button[] pNicknameText = new Button[3];
     Button[] pMoneyText = new Button[3];
-
+    Button foldButton;
     ImageView userCard1View;
     ImageView userCard2View;
     ImageView tableCard1View;
@@ -66,7 +68,8 @@ public class GamePage extends AppCompatActivity {
     int playerTurn = 0;
     int currId = 2;
     int[] userDeckOfCards = new int[7];
-    Button foldButton;
+    int[] userBestHand = new int[5];
+
     int phase = 1;
     int totalPlayers = 1;
     ArrayList<Integer> cardsInUse  = new ArrayList<Integer>();
@@ -139,6 +142,9 @@ public class GamePage extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 gVars = dataSnapshot.getValue(GameVariables.class);
+                if(!gVars.getHasSomeonePlayed()) {
+                    triggerRoundStartEvent(gVars.getCurrentRound());
+                }
                 if(gVars.getPlayerTurn() == userSpot+1) {
                     if(gVars.getCurrentRound() == 4) {
                         checkButton.setVisibility(View.GONE);
@@ -150,9 +156,7 @@ public class GamePage extends AppCompatActivity {
                         FirebaseDatabase database = FirebaseDatabase.getInstance();
                         DatabaseReference updateGlobal = database.getReference("game-1/player-variables/" + Integer.toString(userSpot));
                         updateGlobal.setValue(user);
-
-
-                        //switchPlayer();
+                        switchPlayer();
                     }
                     else {
                         if (user.getCard1() == -1) {
@@ -294,11 +298,15 @@ public class GamePage extends AppCompatActivity {
         }
         return;
     }
-    private void beginNewRound() {
-        if(gVars.getCurrentRound() < 3) {
-            generateTableCards(gVars.getCurrentRound()+1);
+
+    private void triggerRoundStartEvent(int currentRound) {
+
+        if(currentRound > 0 && currentRound < 4) { // Distribute table cards on rounds 1, 2, 3
+            generateTableCards(gVars.getCurrentRound());
         }
-        else if(gVars.getCurrentRound() == 3) {
+        else if(currentRound == 4) { // Check hand on round 4
+
+            /* Update the user's hand in its database */
             String hand = getUserHand();
             user.setBestHandName(hand);
             FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -306,42 +314,45 @@ public class GamePage extends AppCompatActivity {
             updateGlobal.setValue(user);
 
 
-            updateGlobal = database.getReference("game-1/variables");
-            gVars.setCurrentRound(gVars.getCurrentRound()+1);
-            gVars.setPlayerTurn((int)((Math.log( gVars.getPlayersCompeting() & -gVars.getPlayersCompeting() ))/Math.log(2)) + 1); // The current player
-            gVars.setCurrentlyCompeting( gVars.getPlayersCompeting() - (int)(Math.pow(2, (int)((Math.log( gVars.getPlayersCompeting() & -gVars.getPlayersCompeting() ))/Math.log(2)))));
-
-
-            updateGlobal.setValue(gVars);
-
+            /* Remove the buttons */
             checkButton.setVisibility(View.GONE);
             foldButton.setVisibility(View.GONE);
             raiseButton.setVisibility(View.GONE);
-
-            return;
         }
-        gVars.setCurrentRound(gVars.getCurrentRound()+1);
-        gVars.setPlayerTurn((int)((Math.log( gVars.getPlayersCompeting() & -gVars.getPlayersCompeting() ))/Math.log(2)) + 1); // The current player
-        gVars.setCurrentlyCompeting( gVars.getPlayersCompeting() - (int)(Math.pow(2, (int)((Math.log( gVars.getPlayersCompeting() & -gVars.getPlayersCompeting() ))/Math.log(2)))));
+        else if(currentRound == 5) { // Reveal results
+            // Find winner
+            // make winner win
+        }
+
+        /* Update the global variables */
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference updateGlobal = database.getReference("game-1/variables");
+        gVars.setHasSomeonePlayed(true);
         updateGlobal.setValue(gVars);
     }
+
     private void switchPlayer() {
+        /* Hide the buttons */
         checkButton.setVisibility(View.GONE);
         foldButton.setVisibility(View.GONE);
         raiseButton.setVisibility(View.GONE);
+
+        /* Database variables */
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference updateGlobal = database.getReference("game-1/variables");
+
         if(gVars.getCurrentlyCompeting() == 0) {
-            beginNewRound();
+            gVars.setHasSomeonePlayed(false); // The next player will be first of the new round
+            gVars.setCurrentRound(gVars.getCurrentRound()+1);
+            gVars.setPlayerTurn((int)((Math.log( gVars.getPlayersCompeting() & -gVars.getPlayersCompeting() ))/Math.log(2)) + 1); // The current player
+            gVars.setCurrentlyCompeting( gVars.getPlayersCompeting() - (int)(Math.pow(2, (int)((Math.log( gVars.getPlayersCompeting() & -gVars.getPlayersCompeting() ))/Math.log(2)))));
         }
         else {
-
             gVars.setPlayerTurn((int)((Math.log( gVars.getCurrentlyCompeting() & -gVars.getCurrentlyCompeting() ))/Math.log(2)) + 1); // The current player
             gVars.setCurrentlyCompeting( gVars.getCurrentlyCompeting() - (int) (Math.pow(2, gVars.getPlayerTurn()-1)));
-            FirebaseDatabase database = FirebaseDatabase.getInstance();
-            DatabaseReference updateGlobal = database.getReference("game-1/variables");
-            updateGlobal.setValue(gVars);
         }
+
+        updateGlobal.setValue(gVars);
     }
 
     private String generateCard(int forced1, int forced2)
@@ -517,6 +528,7 @@ public class GamePage extends AppCompatActivity {
         }
         return cardList;
     }
+
     private void generateCardsForPlayer() {
         user.setCard1(getRandomCardFromDeck(getCurrentDeckOfCards()));
         user.setCard2(getRandomCardFromDeck(getCurrentDeckOfCards()));
@@ -532,6 +544,7 @@ public class GamePage extends AppCompatActivity {
         resID = getResources().getIdentifier(returnCardName(user.getCard2()), "drawable", "com.example.lepti.pokerapp");
         userCard2View.setImageResource(resID);
     }
+
     private void generateTableCards(int phase) {
         if(phase == 1) {
             tCards.setTableCard1(getRandomCardFromDeck(getCurrentDeckOfCards()));
@@ -649,6 +662,7 @@ public class GamePage extends AppCompatActivity {
         return (rank+suit);
     }
     public String getUserHand() {
+
         userDeckOfCards[0] = user.getCard1();
         userDeckOfCards[1] = user.getCard2();
         userDeckOfCards[2] = tCards.getTableCard1();
@@ -656,6 +670,32 @@ public class GamePage extends AppCompatActivity {
         userDeckOfCards[4] = tCards.getTableCard3();
         userDeckOfCards[5] = tCards.getTableCard4();
         userDeckOfCards[6] = tCards.getTableCard5();
+
+        /* We generate a TreeSet that contains all the player's cards */
+        Set<Integer> allCards = new TreeSet<>();
+        allCards.add(userDeckOfCards[0]);
+        allCards.add(userDeckOfCards[1]);
+        allCards.add(userDeckOfCards[2]);
+        allCards.add(userDeckOfCards[3]);
+        allCards.add(userDeckOfCards[4]);
+        allCards.add(userDeckOfCards[5]);
+        allCards.add(userDeckOfCards[6]);
+        int firstRemoved = 0;
+
+        /* We create a reverse set */
+        Set<Integer> reverseCards = ((TreeSet<Integer>) allCards).descendingSet();
+        Iterator<Integer> iteratorReverse;
+        iteratorReverse = reverseCards.iterator();
+
+        /* We iterate through the set */
+        int index = 0;
+        while (iteratorReverse.hasNext() && index < 5) {
+            int card = iteratorReverse.next();
+            userBestHand[index] = card;
+            index++;
+        }
+
+
         ArrayList<Integer> pairs = new ArrayList<>();
         String results = "No Pair";
         for(int i = 0; i < 6; i++) {
@@ -744,7 +784,7 @@ public class GamePage extends AppCompatActivity {
                 }
             }
         }
-        Set<Integer> flushSet = new HashSet<Integer>();
+        Set<Integer> flushSet = new TreeSet<>();
         for(int u = 0; u < 3; u++) {
             for(int i = 0; i < 7; i++) {
                 int cardRank = (userDeckOfCards[i])%13;
@@ -761,8 +801,8 @@ public class GamePage extends AppCompatActivity {
         }
 
 
-        Set<Integer> unique = new HashSet<Integer>(pairs);
-        Map<Integer, Integer> unsortedMap = new HashMap<Integer, Integer>();
+        Set<Integer> unique = new HashSet<>(pairs);
+        Map<Integer, Integer> unsortedMap = new HashMap<>();
         for (Integer key : unique) {
             Integer numberOfSimilarCards = Collections.frequency(pairs, key)+1;
             unsortedMap.put(key, numberOfSimilarCards); // insert in the map
@@ -782,37 +822,167 @@ public class GamePage extends AppCompatActivity {
             sortedMap.put(entry.getKey(), entry.getValue());
         }
         int entryId = 0;
+
         for (Map.Entry<Integer, Integer> entry : sortedMap.entrySet()) {
             entryId++;
             if(entry.getValue() == 4) {
                 results = "Four of a Kind";
+
+                allCards.remove(entry.getKey());
+
+                /* We create a reverse set */
+                Set<Integer> reverseAllCards = ((TreeSet<Integer>) allCards).descendingSet();
+                Iterator<Integer> iterator;
+                iterator = reverseAllCards.iterator();
+
+                /* We iterate through the set */
+                while (iterator.hasNext()) {
+                    int card = iterator.next();
+                    userBestHand[0] = entry.getKey();
+                    userBestHand[1] = entry.getKey();
+                    userBestHand[2] = entry.getKey();
+                    userBestHand[3] = entry.getKey();
+                    userBestHand[4] = card;
+                    break;
+                }
                 break;
             }
-            if(entry.getValue() == 3) results = "Three of a Kind";
-            if(( entryId == 2 || entryId == 3) && results.equals("Three of a Kind") && entry.getValue() == 2) {
+            if(entry.getValue() == 3) {
+                results = "Three of a Kind";
+                firstRemoved = entry.getKey();
+                allCards.remove(firstRemoved);
+            }
+            if(( entryId == 2 ) && results.equals("Three of a Kind") && entry.getValue() == 2) {
                 results = "Full House";
+                allCards.remove(entry.getKey());
+                userBestHand[0] = firstRemoved;
+                userBestHand[1] = firstRemoved;
+                userBestHand[2] = firstRemoved;
+                userBestHand[3] = entry.getKey();
+                userBestHand[4] = entry.getKey();
                 break;
             }
             if(entry.getValue() == 2 && results.equals("One Pair")) {
                 results = "Two Pairs";
-                System.out.println("PAIRS: GET CALLED");
+                allCards.remove(entry.getKey());
+                userBestHand[0] = firstRemoved;
+                userBestHand[1] = firstRemoved;
+                userBestHand[2] = entry.getKey();
+                userBestHand[3] = entry.getKey();
+
+                /* We create a reverse set */
+                Set<Integer> reverseAllCards = ((TreeSet<Integer>) allCards).descendingSet();
+                Iterator<Integer> iterator;
+                iterator = reverseAllCards.iterator();
+
+                /* We iterate through the set */
+                while (iterator.hasNext()) {
+                    int card = iterator.next();
+                    userBestHand[4] = card;
+                    break;
+                }
+
                 break;
             }
             else if(entry.getValue() == 2) {
                 results = "One Pair";
+                firstRemoved = entry.getKey();
+                allCards.remove(firstRemoved);
             }
         }
-        System.out.println("PAIRS: Called " + Integer.toString(entryId));
+
+        if(results == "Three of a Kind") {
+            /* We create a reverse set */
+            Set<Integer> reverseAllCards = ((TreeSet<Integer>) allCards).descendingSet();
+            Iterator<Integer> iterator;
+            iterator = reverseAllCards.iterator();
+
+            /* We assign the first three cards */
+            userBestHand[0] = firstRemoved;
+            userBestHand[1] = firstRemoved;
+            userBestHand[2] = firstRemoved;
+
+            /* We iterate through the set */
+            int i = 3;
+            while (iterator.hasNext() && i < 5) {
+                int card = iterator.next();
+                userBestHand[i] = card;
+                i++;
+            }
+        }
+        else if(results == "One Pair") {
+            /* We create a reverse set */
+            Set<Integer> reverseAllCards = ((TreeSet<Integer>) allCards).descendingSet();
+            Iterator<Integer> iterator;
+            iterator = reverseAllCards.iterator();
+
+            /* We assign the first three cards */
+            userBestHand[0] = firstRemoved;
+            userBestHand[1] = firstRemoved;
+
+            /* We iterate through the set */
+            int i = 2;
+            while (iterator.hasNext() && i < 5) {
+                int card = iterator.next();
+                userBestHand[i] = card;
+                i++;
+            }
+        }
+
+
+
         if(highestStraightFlush == 0) {
+            userBestHand[0] = 0;
+            userBestHand[1] = 12;
+            userBestHand[2] = 11;
+            userBestHand[3] = 10;
+            userBestHand[4] = 9;
             results = "Royal Flush";
         }
         else if(highestStraightFlush != -1) {
+            userBestHand[0] = highestStraightFlush;
+            userBestHand[1] = highestStraightFlush-1;
+            userBestHand[2] = highestStraightFlush-2;
+            userBestHand[3] = highestStraightFlush-3;
+            userBestHand[4] = highestStraightFlush-4;
             results = "Straight Flush";
         }
         else if(!results.equals("Four of a Kind") && !results.equals("Full House") && !flushSet.isEmpty()) {
+            int i = 0;
+            if(flushSet.contains(0)) {
+                userBestHand[0] = 0;
+                i++;
+            }
+
+            /* We create a reverse set */
+            Set<Integer> flushSetReverse = ((TreeSet<Integer>) flushSet).descendingSet();
+            Iterator iterator;
+            iterator = flushSetReverse.iterator();
+
+            /* We iterate through the set */
+            while (iterator.hasNext()) {
+                userBestHand[i] = (int) iterator.next();
+                i++;
+                if(i == 5) break;
+            }
+
             results = "Flush";
         }
         else if(!results.equals("Four of a Kind") && !results.equals("Full House") && highestStraight != -1) {
+            if(highestStraight == 0) {
+                userBestHand[0] = 0;
+                userBestHand[1] = 12;
+                userBestHand[2] = 11;
+                userBestHand[3] = 10;
+                userBestHand[4] = 9;
+            }
+            else {
+                userBestHand[0] = highestStraight;
+                userBestHand[1] = highestStraight-1;
+                userBestHand[2] = highestStraight-2;
+                userBestHand[3] = highestStraight-3;
+                userBestHand[4] = highestStraight-4;
+            }
             results = "Straight";
         }
         return results;
@@ -980,8 +1150,8 @@ public class GamePage extends AppCompatActivity {
                 }
 
 
-                Set<Integer> unique = new HashSet<Integer>(pairs);
-                Map<Integer, Integer> unsortedMap = new HashMap<Integer, Integer>();
+                Set<Integer> unique = new HashSet<>(pairs);
+                Map<Integer, Integer> unsortedMap = new HashMap<>();
                 for (Integer key : unique) {
                     Integer numberOfSimilarCards = Collections.frequency(pairs, key)+1;
                     unsortedMap.put(key, numberOfSimilarCards); // insert in the map
