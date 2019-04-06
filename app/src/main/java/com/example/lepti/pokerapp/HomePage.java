@@ -29,6 +29,7 @@ import java.util.Map;
 
 import classes.GameVariables;
 import classes.PlayerVariables;
+import classes.TableCards;
 
 public class HomePage extends AppCompatActivity {
     ImageView app_logo;
@@ -68,7 +69,11 @@ public class HomePage extends AppCompatActivity {
                 Log.w("TAG", "loadPost:onCancelled", databaseError.toException());
             }
         });
+        DatabaseReference cardsRef = database.getReference("game-1/table-cards");
+        cardsRef.setValue(new TableCards());
 
+        cardsRef = database.getReference("game-1/variables");
+        cardsRef.setValue(new GameVariables());
         app_logo.setAnimation(fromtop);
         join_button = findViewById(R.id.joinGameButton);
         join_button.setOnClickListener(new View.OnClickListener() {
