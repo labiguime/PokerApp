@@ -58,6 +58,7 @@ public class GamePage extends AppCompatActivity {
     ImageView tableCard5View;
     RelativeLayout[] playerAvatarLayout = new RelativeLayout[3];
     Button checkButton;
+    Button raiseButton;
 
 
     int playerTurn = 0;
@@ -77,7 +78,7 @@ public class GamePage extends AppCompatActivity {
         setContentView(R.layout.activity_game_page);
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        final FirebaseDatabase database = FirebaseDatabase.getInstance();
 
         /* Assigning a variable to each view */
         pAvatar[0] = findViewById(R.id.p2Avatar);
@@ -107,7 +108,7 @@ public class GamePage extends AppCompatActivity {
         playerAvatarLayout[2] = findViewById(R.id.layout_player_3);
         foldButton = findViewById(R.id.foldButton);
         readyButton = findViewById(R.id.readyButton);
-
+        raiseButton = findViewById(R.id.raiseButton);
         /* Recovering the extras */
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
@@ -122,6 +123,7 @@ public class GamePage extends AppCompatActivity {
         foldButton.setVisibility(View.GONE);
         checkButton.setVisibility(View.GONE);
         readyButton.setVisibility(View.VISIBLE);
+        raiseButton.setVisibility(View.GONE);
         playerAvatarLayout[0].setVisibility(View.GONE);
         playerAvatarLayout[1].setVisibility(View.GONE);
         playerAvatarLayout[2].setVisibility(View.GONE);
@@ -133,6 +135,11 @@ public class GamePage extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 gVars = dataSnapshot.getValue(GameVariables.class);
+                if(gVars.getPlayerTurn() == userSpot+1) {
+                    checkButton.setVisibility(View.VISIBLE);
+                    foldButton.setVisibility(View.VISIBLE);
+                    raiseButton.setVisibility(View.VISIBLE);
+                }
             }
 
             @Override
@@ -152,13 +159,10 @@ public class GamePage extends AppCompatActivity {
                         if(snapshot.getValue(Boolean.class) == true) {
                             hidePlayerAvatar(Integer.parseInt(snapshot.getKey()));
                         }
-                        //
                         else {
                             showPlayerAvatar(Integer.parseInt(snapshot.getKey()));
                         }
                     }
-
-                        //
                 }
             }
 
@@ -172,11 +176,14 @@ public class GamePage extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 gVars.setReadyPlayers(gVars.getReadyPlayers()+1);
+                gVars.setPlayersCompeting(gVars.getPlayersCompeting() + (int)(Math.pow(2, userSpot)));
                 readyButton.setVisibility(View.GONE);
                 if(gVars.getReadyPlayers() == gVars.getNumberPlayers() && gVars.getNumberPlayers() > 1) {
-                    // we can start the game
-                    // remove value event listener for players
+                    gVars.setPlayerTurn((int)((Math.log( gVars.getPlayersCompeting() & -gVars.getPlayersCompeting() ))/Math.log(2)) + 1); // The current player
+                    gVars.setCurrentlyCompeting( gVars.getPlayersCompeting() - (int)(Math.pow(2, (int)((Math.log( gVars.getPlayersCompeting() & -gVars.getPlayersCompeting() ))/Math.log(2)))));
                 }
+                DatabaseReference globalVariablesRef = database.getReference("game-1/variables");
+                globalVariablesRef.setValue(gVars);
             }
         });
 
@@ -185,39 +192,30 @@ public class GamePage extends AppCompatActivity {
         foldButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                PokerPhase(phase);
-                phase++;
+                //PokerPhase(phase);
+                //phase++;
             }
         });
 
         checkButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                /*if(playerTurn == 0) {
-                    if(individualBet != 0) {
-                        Toast.makeText(GamePage.this, "You cannot check because there is a bet on the table.", LENGTH_SHORT).show();
-                    }
-                    AlertDialog.Builder builder = new AlertDialog.Builder(GamePage.this);
-                    builder.setMessage("Do you really want to check?").setTitle("Action");
-
-                    builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-
-                            Toast.makeText(GamePage.this, "You checked!", LENGTH_SHORT).show();
-                            // call next turn
-                        }
-                    });
-                    builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-
-                        }
-                    });
-                    AlertDialog dialog = builder.create();
-                    dialog.show();
-                }*/
-
+                checkButton.setVisibility(View.GONE);
+                foldButton.setVisibility(View.GONE);
+                raiseButton.setVisibility(View.GONE);
+                Toast.makeText(GamePage.this, "You checked!", LENGTH_SHORT).show();
+                if(gVars.getCurrentlyCompeting() == 0) {
+                    gVars.setPlayerTurn((int)((Math.log( gVars.getPlayersCompeting() & -gVars.getPlayersCompeting() ))/Math.log(2)) + 1); // The current player
+                    gVars.setCurrentlyCompeting( gVars.getPlayersCompeting() - (int)(Math.pow(2, (int)((Math.log( gVars.getPlayersCompeting() & -gVars.getPlayersCompeting() ))/Math.log(2)))));
+                }
+                else {
+                    gVars.setPlayerTurn((int)((Math.log( gVars.getCurrentlyCompeting() & -gVars.getCurrentlyCompeting() ))/Math.log(2)) + 1); // The current player
+                    gVars.setCurrentlyCompeting( gVars.getCurrentlyCompeting() - (int) (Math.pow(2, gVars.getPlayerTurn()-1)));
+                }
+                DatabaseReference updateGlobal = database.getReference("game-1/variables/playerTurn");
+                updateGlobal.setValue(gVars.getPlayerTurn());
+                updateGlobal = database.getReference("game-1/variables/currentlyCompeting");
+                updateGlobal.setValue(gVars.getCurrentlyCompeting());
             }
         });
     }

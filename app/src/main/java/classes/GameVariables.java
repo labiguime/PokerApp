@@ -8,6 +8,7 @@ public class GameVariables {
     int playerTurn;
     int playersCompeting;
     int currentRound;
+    int currentlyCompeting;
 
     public GameVariables() {
         roundBet = 0;
@@ -17,6 +18,7 @@ public class GameVariables {
         playerTurn = 0;
         playersCompeting = 0;
         currentRound = 0;
+        currentlyCompeting = 0;
     }
 
     public int getCurrentRound() {
@@ -41,6 +43,14 @@ public class GameVariables {
 
     public void setTotalBet(int totalBet) {
         this.totalBet = totalBet;
+    }
+
+    public int getCurrentlyCompeting() {
+        return currentlyCompeting;
+    }
+
+    public void setCurrentlyCompeting(int currentlyCompeting) {
+        this.currentlyCompeting = currentlyCompeting;
     }
 
     public int getReadyPlayers() {

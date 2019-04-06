@@ -27,6 +27,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.HashMap;
 import java.util.Map;
 
+import classes.GameVariables;
 import classes.PlayerVariables;
 
 public class HomePage extends AppCompatActivity {
@@ -38,20 +39,35 @@ public class HomePage extends AppCompatActivity {
     EditText nicknameTextBox;
     Button changePictureButton;
     Map<String, Boolean> freeSpots = new HashMap<>();
-
+    GameVariables gVars;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_page);
 
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-        
+
         app_logo = (ImageView) findViewById(R.id.hp_app_logo);
         nicknameTextBox = findViewById(R.id.nicknameTextBox);
         changePictureButton = findViewById(R.id.changePictureButton);
         avatarPicture = (ImageView) findViewById(R.id.avatarPicture);
         fromtop = AnimationUtils.loadAnimation(this, R.anim.fromtop);
 
+        final FirebaseDatabase database = FirebaseDatabase.getInstance();
+        /* Keep global variables up-to-date */
+        DatabaseReference gameVariables = database.getReference("game-1/variables");
+        gameVariables.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                gVars = dataSnapshot.getValue(GameVariables.class);
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.w("TAG", "loadPost:onCancelled", databaseError.toException());
+            }
+        });
 
         app_logo.setAnimation(fromtop);
         join_button = findViewById(R.id.joinGameButton);
@@ -69,7 +85,6 @@ public class HomePage extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(),"Your nickname is too long!",Toast.LENGTH_SHORT).show();
                 }
                 else {
-                    FirebaseDatabase database = FirebaseDatabase.getInstance();
                     DatabaseReference myRef = database.getReference("game-1/free-spots");
                     myRef.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
@@ -112,9 +127,14 @@ public class HomePage extends AppCompatActivity {
         String avatarFileName = "avatar" + Integer.toString(avatarPictureId+1);
         PlayerVariables user;
 
+
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference playerVariables = database.getReference("game-1/player-variables/"+Integer.toString(gameSpot));
         DatabaseReference reference = database.getReference("game-1/free-spots");
+
+        gVars.setNumberPlayers(gVars.getNumberPlayers()+1);
+        DatabaseReference gameVariables = database.getReference("game-1/variables/numberPlayers");
+        gameVariables.setValue(gVars.getNumberPlayers());
 
         user = new PlayerVariables(nickname, avatarFileName);
         playerVariables.setValue(user);
@@ -123,7 +143,6 @@ public class HomePage extends AppCompatActivity {
         myIntent.putExtra("avatar", avatarFileName);
         myIntent.putExtra("nickname", nickname);
         myIntent.putExtra("playerSpot", gameSpot);
-
         startActivity(myIntent);
     }
 
