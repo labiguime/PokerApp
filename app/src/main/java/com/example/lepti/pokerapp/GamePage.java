@@ -75,7 +75,7 @@ public class GamePage extends AppCompatActivity {
     ArrayList<Integer> cardsInUse  = new ArrayList<Integer>();
 
     List<Integer> cardsUsed  = new ArrayList<>();
-
+    List<Integer> winningPlayers = new ArrayList<>();
     PlayerVariables user;
     GameVariables gVars;
     TableCards tCards = new TableCards();
@@ -142,30 +142,33 @@ public class GamePage extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 gVars = dataSnapshot.getValue(GameVariables.class);
-                if(!gVars.getHasSomeonePlayed()) {
-                    triggerRoundStartEvent(gVars.getCurrentRound());
-                }
                 if(gVars.getPlayerTurn() == userSpot+1) {
-                    if(gVars.getCurrentRound() == 4) {
-                        checkButton.setVisibility(View.GONE);
-                        foldButton.setVisibility(View.GONE);
-                        raiseButton.setVisibility(View.GONE);
-
-                        String hand = getUserHand();
-                        user.setBestHandName(hand);
-                        FirebaseDatabase database = FirebaseDatabase.getInstance();
-                        DatabaseReference updateGlobal = database.getReference("game-1/player-variables/" + Integer.toString(userSpot));
-                        updateGlobal.setValue(user);
-                        switchPlayer();
+                    checkButton.setVisibility(View.VISIBLE);
+                    foldButton.setVisibility(View.VISIBLE);
+                    raiseButton.setVisibility(View.VISIBLE);
+                    if(!gVars.getHasSomeonePlayed()) {
+                        triggerRoundStartEvent(gVars.getCurrentRound());
                     }
                     else {
-                        if (user.getCard1() == -1) {
+                        if(gVars.getCurrentRound() == 4) {
+                            checkButton.setVisibility(View.GONE);
+                            foldButton.setVisibility(View.GONE);
+                            raiseButton.setVisibility(View.GONE);
+
+                            String hand = getUserHand();
+                            user.setBestHandName(hand);
+                            FirebaseDatabase database = FirebaseDatabase.getInstance();
+                            DatabaseReference updateGlobal = database.getReference("game-1/player-variables/" + Integer.toString(userSpot));
+                            updateGlobal.setValue(user);
+
+                            updateHands();
+                            switchPlayer();
+
+                        }
+                        else if (gVars.getCurrentRound() == 0) {
                             generateCardsForPlayer();
                             /* No animation yet so we're gonna make it sleep */
                         }
-                        checkButton.setVisibility(View.VISIBLE);
-                        foldButton.setVisibility(View.VISIBLE);
-                        raiseButton.setVisibility(View.VISIBLE);
                     }
                 }
             }
@@ -252,6 +255,27 @@ public class GamePage extends AppCompatActivity {
             }
         });
 
+        DatabaseReference winnersRef = database.getReference("game-1/winner");
+
+        /* Keep track of the winning players */
+        winnersRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                winningPlayers.clear();
+                if(dataSnapshot.exists()) {
+                    if(dataSnapshot.getChildrenCount() > 0) {
+                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                            winningPlayers.add(snapshot.getValue(Integer.class));
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
+
         readyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -261,6 +285,7 @@ public class GamePage extends AppCompatActivity {
                 if(gVars.getReadyPlayers() == gVars.getNumberPlayers() && gVars.getNumberPlayers() > 1) {
                     gVars.setPlayerTurn((int)((Math.log( gVars.getPlayersCompeting() & -gVars.getPlayersCompeting() ))/Math.log(2)) + 1); // The current player
                     gVars.setCurrentlyCompeting( gVars.getPlayersCompeting() - (int)(Math.pow(2, (int)((Math.log( gVars.getPlayersCompeting() & -gVars.getPlayersCompeting() ))/Math.log(2)))));
+                    gVars.setHasSomeonePlayed(false);
                 }
                 DatabaseReference globalVariablesRef = database.getReference("game-1/variables");
                 globalVariablesRef.setValue(gVars);
@@ -299,8 +324,80 @@ public class GamePage extends AppCompatActivity {
         return;
     }
 
+    private int rankHandName(String handName) {
+       if(handName == "One Pair") return 1;
+       else if(handName == "Two Pairs") return 2;
+       else if(handName == "Three of a Kind") return 3;
+       else if(handName == "Straight") return 4;
+       else if(handName == "Flush") return 5;
+       else if(handName == "Full House") return 6;
+       else if(handName == "Four of a Kind") return 7;
+       else if(handName == "Straight Flush") return 8;
+       else if(handName == "Royal Flush") return 9;
+       else return 0;
+    }
+
+    private void updateHands() {
+        int currentWinnerRank = rankHandName(tCards.getWinningHand());
+        int playerHandRank = rankHandName(user.getBestHandName());
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference updateGlobal = database.getReference("game-1/variables/");
+
+        if(playerHandRank > currentWinnerRank) {
+            tCards.setTableCard1(userBestHand[0]);
+            tCards.setTableCard2(userBestHand[1]);
+            tCards.setTableCard3(userBestHand[2]);
+            tCards.setTableCard4(userBestHand[3]);
+            tCards.setTableCard5(userBestHand[4]);
+            tCards.setWinningHand(user.getBestHandName());
+
+            updateGlobal.setValue(tCards);
+
+            updateGlobal = database.getReference("game-1/winner/");
+            updateGlobal.removeValue();
+
+            List<Integer> winningPlayerEx = new ArrayList<>();
+            winningPlayerEx.add(userSpot);
+            updateGlobal.setValue(winningPlayerEx);
+        }
+        else if(playerHandRank == currentWinnerRank) {
+            int trigger = 0;
+            if(tCards.getTableCard1() < userBestHand[0]) trigger = 1;
+            else if(tCards.getTableCard2() < userBestHand[1]) trigger = 1;
+            else if(tCards.getTableCard3() < userBestHand[2]) trigger = 1;
+            else if(tCards.getTableCard4() < userBestHand[3]) trigger = 1;
+            else if(tCards.getTableCard5() < userBestHand[4]) trigger = 1;
+
+            if(trigger == 1) {
+                tCards.setTableCard1(userBestHand[0]);
+                tCards.setTableCard2(userBestHand[1]);
+                tCards.setTableCard3(userBestHand[2]);
+                tCards.setTableCard4(userBestHand[3]);
+                tCards.setTableCard5(userBestHand[4]);
+                updateGlobal.setValue(tCards);
+
+                updateGlobal = database.getReference("game-1/winner/");
+                updateGlobal.removeValue();
+
+                List<Integer> winningPlayerEx = new ArrayList<>();
+                winningPlayerEx.add(userSpot);
+                updateGlobal.setValue(winningPlayerEx);
+
+            }
+            else {
+                updateGlobal = database.getReference("game-1/winner/");
+                winningPlayers.add(userSpot);
+                updateGlobal.setValue(winningPlayers);
+            }
+        }
+        return;
+    }
+
     private void triggerRoundStartEvent(int currentRound) {
 
+        if(currentRound == 0) {
+            generateCardsForPlayer();
+        }
         if(currentRound > 0 && currentRound < 4) { // Distribute table cards on rounds 1, 2, 3
             generateTableCards(gVars.getCurrentRound());
         }
@@ -313,6 +410,20 @@ public class GamePage extends AppCompatActivity {
             DatabaseReference updateGlobal = database.getReference("game-1/player-variables/"+Integer.toString(userSpot));
             updateGlobal.setValue(user);
 
+            tCards.setTableCard1(userBestHand[0]);
+            tCards.setTableCard2(userBestHand[1]);
+            tCards.setTableCard3(userBestHand[2]);
+            tCards.setTableCard4(userBestHand[3]);
+            tCards.setTableCard5(userBestHand[4]);
+            tCards.setState(4);
+            tCards.setWinningHand(getUserHand());
+
+            updateGlobal = database.getReference("game-1/cards/");
+            updateGlobal.setValue(tCards);
+
+            winningPlayers.add(userSpot);
+            updateGlobal = database.getReference("game-1/winner/");
+            updateGlobal.setValue(winningPlayers);
 
             /* Remove the buttons */
             checkButton.setVisibility(View.GONE);
@@ -320,6 +431,7 @@ public class GamePage extends AppCompatActivity {
             raiseButton.setVisibility(View.GONE);
         }
         else if(currentRound == 5) { // Reveal results
+            Toast.makeText(getApplicationContext(),"Final round",Toast.LENGTH_LONG).show();
             // Find winner
             // make winner win
         }
@@ -329,6 +441,10 @@ public class GamePage extends AppCompatActivity {
         DatabaseReference updateGlobal = database.getReference("game-1/variables");
         gVars.setHasSomeonePlayed(true);
         updateGlobal.setValue(gVars);
+
+        if(currentRound == 4) {
+            switchPlayer();
+        }
     }
 
     private void switchPlayer() {

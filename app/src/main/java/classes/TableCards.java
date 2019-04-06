@@ -7,6 +7,7 @@ public class TableCards {
     int tableCard4;
     int tableCard5;
     int state;
+    String winningHand;
 
     public TableCards() {
         tableCard1 = -1;
@@ -15,6 +16,15 @@ public class TableCards {
         tableCard4 = -1;
         tableCard5 = -1;
         state = 0;
+        winningHand = "No Pair";
+    }
+
+    public String getWinningHand() {
+        return winningHand;
+    }
+
+    public void setWinningHand(String winningHand) {
+        this.winningHand = winningHand;
     }
 
     public int getTableCard1() {
