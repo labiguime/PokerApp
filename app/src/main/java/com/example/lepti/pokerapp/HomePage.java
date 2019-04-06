@@ -1,6 +1,7 @@
 package com.example.lepti.pokerapp;
 
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.media.Image;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -26,6 +27,8 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.HashMap;
 import java.util.Map;
 
+import classes.PlayerVariables;
+
 public class HomePage extends AppCompatActivity {
     ImageView app_logo;
     Animation fromtop;
@@ -40,6 +43,9 @@ public class HomePage extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_page);
+
+        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        
         app_logo = (ImageView) findViewById(R.id.hp_app_logo);
         nicknameTextBox = findViewById(R.id.nicknameTextBox);
         changePictureButton = findViewById(R.id.changePictureButton);
@@ -101,17 +107,23 @@ public class HomePage extends AppCompatActivity {
             // Cannot join the game
             return;
         }
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference reference = database.getReference("game-1/free-spots");
-        reference.setValue(freeSpots);
-
         Intent myIntent = new Intent(HomePage.this, GamePage.class);
         String nickname = nicknameTextBox.getText().toString();
-        avatarPictureId = avatarPictureId+1;
-        String avatarFileName = "avatar" + Integer.toString(avatarPictureId);
+        String avatarFileName = "avatar" + Integer.toString(avatarPictureId+1);
+        PlayerVariables user;
+
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference playerVariables = database.getReference("game-1/player-variables/"+Integer.toString(gameSpot));
+        DatabaseReference reference = database.getReference("game-1/free-spots");
+
+        user = new PlayerVariables(nickname, avatarFileName);
+        playerVariables.setValue(user);
+        reference.setValue(freeSpots);
+
         myIntent.putExtra("avatar", avatarFileName);
         myIntent.putExtra("nickname", nickname);
         myIntent.putExtra("playerSpot", gameSpot);
+
         startActivity(myIntent);
     }
 

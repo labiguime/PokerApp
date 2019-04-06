@@ -56,7 +56,7 @@ public class GamePage extends AppCompatActivity {
     ImageView tableCard3View;
     ImageView tableCard4View;
     ImageView tableCard5View;
-    RelativeLayout[] playerAvatarLayout = new RelativeLayout[4];
+    RelativeLayout[] playerAvatarLayout = new RelativeLayout[3];
     Button checkButton;
 
 
@@ -65,13 +65,8 @@ public class GamePage extends AppCompatActivity {
     int[][] playerCards = new int[4][7];
     Button foldButton;
     int phase = 1;
-    int totalBet = 0;
-    int individualBet = 0;
     int totalPlayers = 1;
     ArrayList<Integer> cardsInUse  = new ArrayList<Integer>();
-
-    int readyPlayers = 0;
-    int numberPlayers = 0;
 
     PlayerVariables user;
     GameVariables gVars;
@@ -107,10 +102,9 @@ public class GamePage extends AppCompatActivity {
         tableCard3View = findViewById(R.id.tableCard3);
         tableCard4View = findViewById(R.id.tableCard4);
         tableCard5View = findViewById(R.id.tableCard5);
-        playerAvatarLayout[0] = findViewById(R.id.layout_player_0);
-        playerAvatarLayout[1] = findViewById(R.id.layout_player_1);
-        playerAvatarLayout[2] = findViewById(R.id.layout_player_2);
-        playerAvatarLayout[3] = findViewById(R.id.layout_player_3);
+        playerAvatarLayout[0] = findViewById(R.id.layout_player_1);
+        playerAvatarLayout[1] = findViewById(R.id.layout_player_2);
+        playerAvatarLayout[2] = findViewById(R.id.layout_player_3);
         foldButton = findViewById(R.id.foldButton);
         readyButton = findViewById(R.id.readyButton);
 
@@ -119,8 +113,6 @@ public class GamePage extends AppCompatActivity {
         if (extras != null) {
             user = new PlayerVariables(extras.getString("nickname"), extras.getString("avatar"));
             userSpot = extras.getInt("playerSpot");
-            DatabaseReference playerVariables = database.getReference("game-1/player-variables/"+Integer.toString(userSpot));
-            playerVariables.setValue(user);
         }
 
         /* Setting up the UI */
@@ -130,10 +122,9 @@ public class GamePage extends AppCompatActivity {
         foldButton.setVisibility(View.GONE);
         checkButton.setVisibility(View.GONE);
         readyButton.setVisibility(View.VISIBLE);
-        playerAvatarLayout[0].setVisibility(View.VISIBLE);
+        playerAvatarLayout[0].setVisibility(View.GONE);
         playerAvatarLayout[1].setVisibility(View.GONE);
         playerAvatarLayout[2].setVisibility(View.GONE);
-        playerAvatarLayout[3].setVisibility(View.GONE);
 
 
         /* Keep global variables up-to-date */
@@ -157,10 +148,17 @@ public class GamePage extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    if(!snapshot.getValue(Boolean.class))
-                        hidePlayerAvatar(Integer.parseInt(snapshot.getKey()));
-                    else
-                        showPlayerAvatar(Integer.parseInt(snapshot.getKey()));
+                    if(Integer.parseInt(snapshot.getKey()) != userSpot) {
+                        if(snapshot.getValue(Boolean.class) == true) {
+                            hidePlayerAvatar(Integer.parseInt(snapshot.getKey()));
+                        }
+                        //
+                        else {
+                            showPlayerAvatar(Integer.parseInt(snapshot.getKey()));
+                        }
+                    }
+
+                        //
                 }
             }
 
@@ -182,7 +180,7 @@ public class GamePage extends AppCompatActivity {
             }
         });
 
-        PokerPhase(0);
+        //PokerPhase(0);
 
         foldButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -310,7 +308,8 @@ public class GamePage extends AppCompatActivity {
     }
 
     private void showPlayerAvatar(int playerId) {
-        final int layoutId = (playerId+userSpot)%4;
+        final int layoutId = (playerId+(4-userSpot))%4;
+        Log.d("IDD:", "Spot "+ Integer.toString(userSpot)+ " playerId=" +Integer.toString(playerId) + " layoutId=" + Integer.toString(layoutId) );
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference pReference = database.getReference("game-1/player-variables/"+Integer.toString(playerId));
         pReference.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -325,7 +324,7 @@ public class GamePage extends AppCompatActivity {
                 pAvatar[layoutId-1].setImageResource(resID);
 
                 /* Show the avatar */
-                playerAvatarLayout[layoutId].setVisibility(View.VISIBLE);
+                playerAvatarLayout[layoutId-1].setVisibility(View.VISIBLE);
             }
 
             @Override
@@ -336,8 +335,8 @@ public class GamePage extends AppCompatActivity {
     }
 
     private void hidePlayerAvatar(int playerId) {
-        int layoutId = (playerId+userSpot)%4;
-        playerAvatarLayout[layoutId].setVisibility(View.GONE);
+        int layoutId = (playerId+(4-userSpot))%4;
+        playerAvatarLayout[layoutId-1].setVisibility(View.GONE);
     }
     private String generatePlayerCards(int playerid, int cardid, int forced1, int forced2)
     {
