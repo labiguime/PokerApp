@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -49,6 +50,7 @@ public class GamePage extends AppCompatActivity {
     int userSpot;
     ImageView userAvatar;
     Button userNicknameText;
+    Button userMoneyText;
     Button readyButton;
 
     ImageView[] pAvatar = new ImageView[3];
@@ -62,6 +64,7 @@ public class GamePage extends AppCompatActivity {
     ImageView tableCard3View;
     ImageView tableCard4View;
     ImageView tableCard5View;
+    EditText raiseEditText;
     RelativeLayout[] playerAvatarLayout = new RelativeLayout[3];
     Button checkButton;
     Button raiseButton;
@@ -74,6 +77,7 @@ public class GamePage extends AppCompatActivity {
 
     int phase = 1;
     int totalPlayers = 1;
+
     ArrayList<Integer> cardsInUse  = new ArrayList<Integer>();
 
     List<Integer> cardsUsed  = new ArrayList<>();
@@ -81,6 +85,7 @@ public class GamePage extends AppCompatActivity {
     PlayerVariables user;
     GameVariables gVars;
     TableCards tCards = new TableCards();
+    List<Integer> nextPlayerInLine = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,8 +108,10 @@ public class GamePage extends AppCompatActivity {
         pMoneyText[1] = findViewById(R.id.p3MoneyText);
         pMoneyText[2] = findViewById(R.id.p4MoneyText);
 
+        raiseEditText = findViewById(R.id.raiseEditText);
         userAvatar = findViewById(R.id.userAvatar);
         userNicknameText = findViewById(R.id.userNicknameText);
+        userMoneyText = findViewById(R.id.userMoneyText);
         checkButton = findViewById(R.id.checkButton);
         userCard1View = findViewById(R.id.userCard1);
         userCard2View = findViewById(R.id.userCard2);
@@ -130,6 +137,7 @@ public class GamePage extends AppCompatActivity {
         int resID = getResources().getIdentifier(user.getAvatar(), "drawable", "com.example.lepti.pokerapp");
         userAvatar.setImageResource(resID);
         userNicknameText.setText(user.getNickname());
+        userMoneyText.setText(Integer.toString(user.getMoney()));
         foldButton.setVisibility(View.GONE);
         checkButton.setVisibility(View.GONE);
         readyButton.setVisibility(View.VISIBLE);
@@ -138,6 +146,7 @@ public class GamePage extends AppCompatActivity {
         playerAvatarLayout[1].setVisibility(View.GONE);
         playerAvatarLayout[2].setVisibility(View.GONE);
 
+        hideAllButtons();
         /* Keep global variables up-to-date */
         DatabaseReference gameVariables = database.getReference("game-1/variables");
         ValueEventListener gameVariablesListener = new ValueEventListener() {
@@ -146,9 +155,7 @@ public class GamePage extends AppCompatActivity {
                 gVars = dataSnapshot.getValue(GameVariables.class);
                 if(gVars.getCurrentRound() == -1) {
                     readyButton.setVisibility(View.VISIBLE);
-                    checkButton.setVisibility(View.GONE);
-                    foldButton.setVisibility(View.GONE);
-                    raiseButton.setVisibility(View.GONE);
+                    hideAllButtons();
                     user.setCard1(-1);
                     user.setCard2(-1);
 
@@ -173,16 +180,11 @@ public class GamePage extends AppCompatActivity {
 
 
                     if(!gVars.getHasSomeonePlayed()) {
-                        checkButton.setVisibility(View.VISIBLE);
-                        foldButton.setVisibility(View.VISIBLE);
-                        raiseButton.setVisibility(View.VISIBLE);
                         triggerRoundStartEvent(gVars.getCurrentRound());
                     }
                     else {
                         if(gVars.getCurrentRound() == 4) {
-                            checkButton.setVisibility(View.GONE);
-                            foldButton.setVisibility(View.GONE);
-                            raiseButton.setVisibility(View.GONE);
+                            hideAllButtons();
 
                             String hand = getUserHand();
                             user.setBestHandName(hand);
@@ -194,18 +196,13 @@ public class GamePage extends AppCompatActivity {
                             //switchPlayer();
 
                         }
-                        else if (gVars.getCurrentRound() == 0 && (user.getCard1() == -1 || user.getCard2() == -1)) {
-                            checkButton.setVisibility(View.VISIBLE);
-                            foldButton.setVisibility(View.VISIBLE);
-                            raiseButton.setVisibility(View.VISIBLE);
-                            generateCardsForPlayer();
-                            /* No animation yet so we're gonna make it sleep */
+                        else if(gVars.getCurrentRound() < 4) {
+                            displayAllButtons();
+                            if(gVars.getCurrentRound() == 0 && (user.getCard1() == -1 || user.getCard2() == -1)) {
+                                generateCardsForPlayer();
+                            }
                         }
-                        else {
-                            checkButton.setVisibility(View.VISIBLE);
-                            foldButton.setVisibility(View.VISIBLE);
-                            raiseButton.setVisibility(View.VISIBLE);
-                        }
+
                     }
                 }
             }
@@ -340,6 +337,26 @@ public class GamePage extends AppCompatActivity {
             }
         });
 
+        DatabaseReference pQueueRef = database.getReference("game-1/players-queue");
+        /* Keep track of the players in queue */
+        pQueueRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                nextPlayerInLine.clear();
+                if(dataSnapshot.exists()) {
+                    if(dataSnapshot.getChildrenCount() > 0) {
+                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                            nextPlayerInLine.add(snapshot.getValue(Integer.class));
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
+
         readyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -348,9 +365,14 @@ public class GamePage extends AppCompatActivity {
                 gVars.setCurrentRound(0);
                 readyButton.setVisibility(View.GONE);
                 if(gVars.getReadyPlayers() == gVars.getNumberPlayers() && gVars.getNumberPlayers() > 1) {
-                    gVars.setPlayerTurn((int)((Math.log( gVars.getPlayersCompeting() & -gVars.getPlayersCompeting() ))/Math.log(2)) + 1); // The current player
-                    gVars.setCurrentlyCompeting( gVars.getPlayersCompeting() - (int)(Math.pow(2, (int)((Math.log( gVars.getPlayersCompeting() & -gVars.getPlayersCompeting() ))/Math.log(2)))));
+                    //gVars.setPlayerTurn((int)((Math.log( gVars.getPlayersCompeting() & -gVars.getPlayersCompeting() ))/Math.log(2)) + 1); // The current player
+                    //gVars.setCurrentlyCompeting( gVars.getPlayersCompeting() - (int)(Math.pow(2, (int)((Math.log( gVars.getPlayersCompeting() & -gVars.getPlayersCompeting() ))/Math.log(2)))));
+                    setupPlayerTurns();
+                    gVars.setPlayerTurn(getNextInLine()+1);//);
+                    gVars.setRoundBeginnerId(gVars.getPlayerTurn()-1);
                     gVars.setHasSomeonePlayed(false);
+                    DatabaseReference ref = database.getReference("game-1/players-queue");
+                    ref.setValue(nextPlayerInLine);
                 }
                 DatabaseReference globalVariablesRef = database.getReference("game-1/variables");
                 globalVariablesRef.setValue(gVars);
@@ -377,15 +399,115 @@ public class GamePage extends AppCompatActivity {
         checkButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                checkButton.setVisibility(View.GONE);
-                foldButton.setVisibility(View.GONE);
-                raiseButton.setVisibility(View.GONE);
-                //Toast.makeText(GamePage.this, "You checked!", LENGTH_SHORT).show();
+                if(gVars.getRoundBet() == 0) { // It's a check
+                    checkButton.setVisibility(View.GONE);
+                    foldButton.setVisibility(View.GONE);
+                    raiseButton.setVisibility(View.GONE);
+                    //Toast.makeText(GamePage.this, "You checked!", LENGTH_SHORT).show();
+                    switchPlayer();
+                }
+                else // It's a call
+                {
+                    int money = user.getMoney();
+                    if(money < gVars.getRoundBet()) {
+                        user.setCurrentBet(user.getCurrentBet()+money);
+                        user.setMoney(0);
+                        gVars.setTotalBet(gVars.getTotalBet()+money);
+                    }
+                    else {
+                        user.setCurrentBet(user.getCurrentBet()+gVars.getRoundBet());
+                        user.setMoney(money-gVars.getRoundBet());
+                        gVars.setTotalBet(gVars.getTotalBet()+gVars.getRoundBet());
+                    }
+                    checkButton.setVisibility(View.GONE);
+                    foldButton.setVisibility(View.GONE);
+                    raiseButton.setVisibility(View.GONE);
+                    switchPlayer();
+                    // update money text & database
+                }
+
+            }
+        });
+
+        raiseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(!isNumeric(raiseButton.getText().toString())) {
+                    Toast.makeText(GamePage.this, "It's not a valid number !", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                int raiseAmount = Integer.parseInt(raiseButton.getText().toString());
+                if(raiseAmount < gVars.getRoundBet()) {
+                    Toast.makeText(GamePage.this, "The minimum raise is $"+Integer.toString(gVars.getRoundBet()), Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if(raiseAmount < user.getMoney()) {
+                    Toast.makeText(GamePage.this, "You don't have that much money!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if(raiseAmount > gVars.getRoundBet()) {
+                    user.setMoney(user.getMoney() - raiseAmount);
+                    user.setCurrentBet(raiseAmount);
+                    gVars.setRoundBet(raiseAmount);
+                    gVars.setTotalBet(gVars.getTotalBet() + raiseAmount);
+                    checkButton.setVisibility(View.GONE);
+                    foldButton.setVisibility(View.GONE);
+                    raiseButton.setVisibility(View.GONE);
+                    addPlayerTurnsFromUserSpot(userSpot);
+                }
+                else
+                {
+                    user.setCurrentBet(user.getCurrentBet()+gVars.getRoundBet());
+                    user.setMoney(user.getMoney()-gVars.getRoundBet());
+                    gVars.setTotalBet(gVars.getTotalBet()+gVars.getRoundBet());
+                }
+                // update money text & database
                 switchPlayer();
+
             }
         });
     }
 
+    private int getNextInLine() {
+        if(nextPlayerInLine.isEmpty()) {
+            return -1;
+        }
+        Integer next = nextPlayerInLine.get(0);
+        nextPlayerInLine.remove(next);
+        return next;
+    }
+    private void setupPlayerTurns() {
+        nextPlayerInLine.clear();
+        if(isPlayerCompeting(0)) nextPlayerInLine.add(0);
+        if(isPlayerCompeting(1)) nextPlayerInLine.add(1);
+        if(isPlayerCompeting(2)) nextPlayerInLine.add(2);
+        if(isPlayerCompeting(3)) nextPlayerInLine.add(3);
+    }
+
+    private void addPlayerTurnsFromUserSpot(int spot) {
+        for(int i = 1; i < 4; i++) {
+            if(isPlayerCompeting(((spot+i)%4)) && !nextPlayerInLine.contains(((spot+i)%4))) nextPlayerInLine.add(((spot+i)%4));
+        }
+    }
+
+    private boolean isPlayerCompeting(int id) {
+        int n = gVars.getPlayersCompeting();
+        for(int i =0; i < (3-id); i++) {
+            n = n >> 1;
+        }
+
+        if ((n & 1) == 0) {
+            Log.d("COMPET:", "id " + Integer.toString(id) + " not competing");
+            return true;
+        }
+        else {
+            Log.d("COMPET:", "id " + Integer.toString(id) + " competing");
+            return false;
+        }
+    }
+    private boolean isNumeric(String s) {
+        return s != null && s.matches("[-+]?\\d*\\.?\\d+");
+    }
     private int rankHandName(String handName) {
        if(handName.equals("One Pair")) {
            return 1;
@@ -417,6 +539,44 @@ public class GamePage extends AppCompatActivity {
        else return 0;
     }
 
+    private void displayCheckButton() {
+        if(gVars.getRoundBet() > 0 && user.getMoney() > 0) {
+            checkButton.setText("Call");
+        }
+        else
+        {
+            checkButton.setText("Check");
+        }
+        checkButton.setVisibility(View.VISIBLE);
+    }
+
+    private void displayRaiseButton() {
+        if(user.getMoney() > 0) {
+            raiseButton.setVisibility(View.VISIBLE);
+            raiseEditText.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void displayFoldButton() {
+        if(gVars.getRoundBet() > 0 && user.getMoney() > 0) {
+            foldButton.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void displayAllButtons() {
+        displayCheckButton();
+        displayRaiseButton();
+        displayFoldButton();
+        return;
+    }
+
+    private void hideAllButtons() {
+        raiseButton.setVisibility(View.GONE);
+        raiseEditText.setVisibility(View.GONE);
+        foldButton.setVisibility(View.GONE);
+        checkButton.setVisibility(View.GONE);
+        return;
+    }
     private void updateHands() {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference updateGlobal = database.getReference("game-1/table-cards/");
@@ -507,9 +667,11 @@ public class GamePage extends AppCompatActivity {
 
         if(currentRound == 0 && (user.getCard1() == -1 || user.getCard2() == -1)) {
             generateCardsForPlayer();
+            displayAllButtons();
         }
         if(currentRound > 0 && currentRound < 4) { // Distribute table cards on rounds 1, 2, 3
             generateTableCards(gVars.getCurrentRound());
+            displayAllButtons();
         }
         else if(currentRound == 4) { // Check hand on round 4
 
@@ -535,26 +697,18 @@ public class GamePage extends AppCompatActivity {
             updateGlobal = database.getReference("game-1/winner/");
             updateGlobal.setValue(winningPlayers);
 
-            /* Remove the buttons */
-            checkButton.setVisibility(View.GONE);
-            foldButton.setVisibility(View.GONE);
-            raiseButton.setVisibility(View.GONE);
+            hideAllButtons();
         }
         else if(currentRound == 5) { // Reveal results
             tCards.setState(5);
             FirebaseDatabase database = FirebaseDatabase.getInstance();
             DatabaseReference updateGlobal = database.getReference("game-1/table-cards/");
             updateGlobal.setValue(tCards);
-            checkButton.setVisibility(View.GONE);
-            foldButton.setVisibility(View.GONE);
-            raiseButton.setVisibility(View.GONE);
-            // Find winner
-            // make winner win
+
+            hideAllButtons();
         }
         else if(currentRound == 8 || currentRound == 6) {
-            checkButton.setVisibility(View.GONE);
-            foldButton.setVisibility(View.GONE);
-            raiseButton.setVisibility(View.GONE);
+            hideAllButtons();
         }
 
         /* Update the global variables */
@@ -576,19 +730,29 @@ public class GamePage extends AppCompatActivity {
 
         /* Database variables */
         FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference updateGlobal = database.getReference("game-1/variables");
 
-        if(gVars.getCurrentlyCompeting() == 0) {
+        /* The round at the beginning of the round was the one this user currently has */
+        if(gVars.getRoundBeginnerId() == userSpot) {
+            gVars.setRoundStartBet(user.getCurrentBet());
+        }
+
+        int playerToCome = getNextInLine();
+        if(playerToCome == -1) {
+            // setup again
+            setupPlayerTurns();
+            playerToCome = getNextInLine();
+            gVars.setPlayerTurn(playerToCome+1);
             gVars.setHasSomeonePlayed(false); // The next player will be first of the new round
             gVars.setCurrentRound(gVars.getCurrentRound()+1);
-            gVars.setPlayerTurn((int)((Math.log( gVars.getPlayersCompeting() & -gVars.getPlayersCompeting() ))/Math.log(2)) + 1); // The current player
-            gVars.setCurrentlyCompeting( gVars.getPlayersCompeting() - (int)(Math.pow(2, (int)((Math.log( gVars.getPlayersCompeting() & -gVars.getPlayersCompeting() ))/Math.log(2)))));
         }
-        else {
-            gVars.setPlayerTurn((int)((Math.log( gVars.getCurrentlyCompeting() & -gVars.getCurrentlyCompeting() ))/Math.log(2)) + 1); // The current player
-            gVars.setCurrentlyCompeting( gVars.getCurrentlyCompeting() - (int) (Math.pow(2, gVars.getPlayerTurn()-1)));
+        else
+        {
+            gVars.setPlayerTurn(playerToCome+1);
         }
 
+        DatabaseReference updateGlobal = database.getReference("game-1/players-queue");
+        updateGlobal.setValue(nextPlayerInLine);
+        updateGlobal = database.getReference("game-1/variables");
         updateGlobal.setValue(gVars);
     }
 
