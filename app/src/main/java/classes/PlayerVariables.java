@@ -8,6 +8,7 @@ public class PlayerVariables {
     int card2;
     int money;
     int lastRoundPlayed;
+    int currentBet;
 
     public PlayerVariables() {
         this.nickname = "Nobody";
@@ -26,6 +27,15 @@ public class PlayerVariables {
         card1 = -1;
         card2 = -1;
         money = 10000;
+        currentBet = 0;
+    }
+
+    public int getCurrentBet() {
+        return currentBet;
+    }
+
+    public void setCurrentBet(int currentBet) {
+        this.currentBet = currentBet;
     }
 
     public int getLastRoundPlayed() {

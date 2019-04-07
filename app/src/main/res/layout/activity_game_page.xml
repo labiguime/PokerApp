@@ -13,6 +13,12 @@
         android:layout_height="36dp"
         android:orientation="vertical">
 
+        <TextView
+            android:id="@+id/totalBetText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="0" />
+
         <RelativeLayout
             android:id="@+id/layout_player_1"
             android:layout_width="211dp"
@@ -162,6 +168,13 @@
                 </LinearLayout>
             </RelativeLayout>
 
+            <TextView
+                android:id="@+id/currentBetText"
+                android:layout_width="69dp"
+                android:layout_height="51dp"
+                android:layout_weight="1"
+                android:text="0" />
+
             <RelativeLayout
                 android:id="@+id/layout_player_3"
                 android:layout_width="273dp"
@@ -271,7 +284,7 @@
                             android:layout_height="match_parent"
                             android:layout_width="44dp"
                             android:layout_gravity="center"
-                            app:srcCompat="@drawable/king_of_clubs" />
+                            app:srcCompat="@drawable/backside_old" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -284,7 +297,7 @@
                             android:layout_width="44dp"
                             android:layout_height="match_parent"
                             android:layout_gravity="center"
-                            app:srcCompat="@drawable/ace_of_spades" />
+                            app:srcCompat="@drawable/backside_old" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -297,7 +310,7 @@
                             android:layout_width="44dp"
                             android:layout_height="match_parent"
                             android:layout_gravity="center"
-                            app:srcCompat="@drawable/king_of_hearts" />
+                            app:srcCompat="@drawable/backside_old" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -310,7 +323,7 @@
                             android:layout_width="44dp"
                             android:layout_height="match_parent"
                             android:layout_gravity="center"
-                            app:srcCompat="@drawable/c8_of_diamonds" />
+                            app:srcCompat="@drawable/backside_old" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -323,7 +336,7 @@
                             android:layout_height="match_parent"
                             android:layout_width="44dp"
                             android:layout_gravity="center"
-                            app:srcCompat="@drawable/c7_of_spades" />
+                            app:srcCompat="@drawable/backside_old" />
                     </LinearLayout>
                 </LinearLayout>
 
@@ -453,7 +466,16 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="CALL/RAISE" />
+                android:text="Raise" />
+
+            <EditText
+                android:id="@+id/raiseEditText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ems="10"
+                android:hint="Type your bet"
+                android:inputType="number" />
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

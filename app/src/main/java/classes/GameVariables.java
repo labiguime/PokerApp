@@ -9,7 +9,9 @@ public class GameVariables {
     int playersCompeting;
     int currentRound;
     int currentlyCompeting;
+    int roundStartBet;
     Boolean hasSomeonePlayed;
+    int roundBeginnerId;
 
     public GameVariables() {
         roundBet = 0;
@@ -20,7 +22,25 @@ public class GameVariables {
         playersCompeting = 0;
         currentRound = 0;
         currentlyCompeting = 0;
+        roundStartBet = 0;
         hasSomeonePlayed = false;
+        roundBeginnerId = 0;
+    }
+
+    public int getRoundBeginnerId() {
+        return roundBeginnerId;
+    }
+
+    public void setRoundBeginnerId(int roundBeginnerId) {
+        this.roundBeginnerId = roundBeginnerId;
+    }
+
+    public int getRoundStartBet() {
+        return roundStartBet;
+    }
+
+    public void setRoundStartBet(int roundStartBet) {
+        this.roundStartBet = roundStartBet;
     }
 
     public int getCurrentRound() {
