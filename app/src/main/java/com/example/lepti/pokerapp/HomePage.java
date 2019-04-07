@@ -72,6 +72,14 @@ public class HomePage extends AppCompatActivity {
         DatabaseReference cardsRef = database.getReference("game-1/table-cards");
         cardsRef.setValue(new TableCards());
 
+        cardsRef = database.getReference("game-1/free-spots");
+        freeSpots.put("0", true);
+        freeSpots.put("1", true);
+        freeSpots.put("2", true);
+        freeSpots.put("3", true);
+        cardsRef.setValue(freeSpots);
+        freeSpots.clear();
+
         cardsRef = database.getReference("game-1/variables");
         cardsRef.setValue(new GameVariables());
         app_logo.setAnimation(fromtop);
@@ -83,10 +91,10 @@ public class HomePage extends AppCompatActivity {
                 Intent myIntent = new Intent(HomePage.this, GamePage.class);
                 String nickname = nicknameTextBox.getText().toString();
 
-                if(nickname.isEmpty()) {
+                /*if(nickname.isEmpty()) {
                     Toast.makeText(getApplicationContext(),"You must choose a nickname!",Toast.LENGTH_SHORT).show();
-                }
-                else if(nickname.length() > 15) {
+                }*/
+                if(nickname.length() > 15) {
                     Toast.makeText(getApplicationContext(),"Your nickname is too long!",Toast.LENGTH_SHORT).show();
                 }
                 else {

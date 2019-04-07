@@ -7,6 +7,7 @@ public class PlayerVariables {
     int card1;
     int card2;
     int money;
+    int lastRoundPlayed;
 
     public PlayerVariables() {
         this.nickname = "Nobody";
@@ -15,6 +16,7 @@ public class PlayerVariables {
         card1 = -1;
         card2 = -1;
         money = 10000;
+        lastRoundPlayed = -1;
     }
 
     public PlayerVariables(String nickname, String avatar) {
@@ -24,6 +26,14 @@ public class PlayerVariables {
         card1 = -1;
         card2 = -1;
         money = 10000;
+    }
+
+    public int getLastRoundPlayed() {
+        return lastRoundPlayed;
+    }
+
+    public void setLastRoundPlayed(int lastRoundPlayed) {
+        this.lastRoundPlayed = lastRoundPlayed;
     }
 
     public int getCard1() {

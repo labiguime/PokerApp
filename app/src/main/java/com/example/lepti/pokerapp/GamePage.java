@@ -34,6 +34,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.TreeSet;
 
 import static android.widget.Toast.LENGTH_SHORT;
@@ -142,11 +144,38 @@ public class GamePage extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 gVars = dataSnapshot.getValue(GameVariables.class);
-                if(gVars.getPlayerTurn() == userSpot+1) {
-                    checkButton.setVisibility(View.VISIBLE);
-                    foldButton.setVisibility(View.VISIBLE);
-                    raiseButton.setVisibility(View.VISIBLE);
+                if(gVars.getCurrentRound() == -1) {
+                    readyButton.setVisibility(View.VISIBLE);
+                    checkButton.setVisibility(View.GONE);
+                    foldButton.setVisibility(View.GONE);
+                    raiseButton.setVisibility(View.GONE);
+                    user.setCard1(-1);
+                    user.setCard2(-1);
+
+                    int ressID = getResources().getIdentifier("backside_old", "drawable", "com.example.lepti.pokerapp");
+                    userCard1View.setImageResource(ressID);
+                    userCard2View.setImageResource(ressID);
+                    tableCard1View.setImageResource(ressID);
+                    tableCard2View.setImageResource(ressID);
+                    tableCard3View.setImageResource(ressID);
+                    tableCard4View.setImageResource(0);
+                    tableCard5View.setImageResource(0);
+                    DatabaseReference db = database.getReference("game-1/player-variables/"+Integer.toString(userSpot));
+                    db.setValue(user);
+                }
+                else if(gVars.getPlayerTurn() == userSpot+1) {
+                    if((user.getLastRoundPlayed() == gVars.getCurrentRound() && gVars.getCurrentRound() != 0)) return;
+
+                    user.setLastRoundPlayed(gVars.getCurrentRound());
+                    FirebaseDatabase db = FirebaseDatabase.getInstance();
+                    DatabaseReference update = db.getReference("game-1/player-variables/" + Integer.toString(userSpot));
+                    update.setValue(user);
+
+
                     if(!gVars.getHasSomeonePlayed()) {
+                        checkButton.setVisibility(View.VISIBLE);
+                        foldButton.setVisibility(View.VISIBLE);
+                        raiseButton.setVisibility(View.VISIBLE);
                         triggerRoundStartEvent(gVars.getCurrentRound());
                     }
                     else {
@@ -162,12 +191,20 @@ public class GamePage extends AppCompatActivity {
                             updateGlobal.setValue(user);
 
                             updateHands();
-                            switchPlayer();
+                            //switchPlayer();
 
                         }
-                        else if (gVars.getCurrentRound() == 0) {
+                        else if (gVars.getCurrentRound() == 0 && (user.getCard1() == -1 || user.getCard2() == -1)) {
+                            checkButton.setVisibility(View.VISIBLE);
+                            foldButton.setVisibility(View.VISIBLE);
+                            raiseButton.setVisibility(View.VISIBLE);
                             generateCardsForPlayer();
                             /* No animation yet so we're gonna make it sleep */
+                        }
+                        else {
+                            checkButton.setVisibility(View.VISIBLE);
+                            foldButton.setVisibility(View.VISIBLE);
+                            raiseButton.setVisibility(View.VISIBLE);
                         }
                     }
                 }
@@ -206,6 +243,33 @@ public class GamePage extends AppCompatActivity {
                     // state 3 update 1 card
                     int resID = getResources().getIdentifier(returnCardName(tCards.getTableCard5()), "drawable", "com.example.lepti.pokerapp");
                     tableCard5View.setImageResource(resID);
+                }
+                else if(tCards.getState() == 5) { // time to get your winnings
+                    if(user.getLastRoundPlayed() != 8) {
+                        checkButton.setVisibility(View.GONE);
+                        foldButton.setVisibility(View.GONE);
+                        raiseButton.setVisibility(View.GONE);
+                        user.setLastRoundPlayed(8);
+                        boolean hasUserWon = false;
+                        for(int i = 0; i < winningPlayers.size(); i++) {
+                            if(winningPlayers.get(i) == userSpot) {
+                                Toast.makeText(GamePage.this, "Congratulations! You won!", Toast.LENGTH_SHORT).show();
+                                hasUserWon = true;
+                                increaseUserMoney((int) Math.floorDiv(gVars.getTotalBet(), winningPlayers.size()));
+                            }
+                        }
+                        if(winningPlayers.get(winningPlayers.size()-1) == userSpot) {
+                            new Timer().schedule(new TimerTask() {
+                                @Override
+                                public void run() {
+                                    resetGame();
+                                }
+                            }, 4000);
+                        }
+                        if(!hasUserWon) {
+                            Toast.makeText(GamePage.this, "You lost!", Toast.LENGTH_SHORT).show();
+                        }
+                    }
                 }
             }
 
@@ -281,6 +345,7 @@ public class GamePage extends AppCompatActivity {
             public void onClick(View v) {
                 gVars.setReadyPlayers(gVars.getReadyPlayers()+1);
                 gVars.setPlayersCompeting(gVars.getPlayersCompeting() + (int)(Math.pow(2, userSpot)));
+                gVars.setCurrentRound(0);
                 readyButton.setVisibility(View.GONE);
                 if(gVars.getReadyPlayers() == gVars.getNumberPlayers() && gVars.getNumberPlayers() > 1) {
                     gVars.setPlayerTurn((int)((Math.log( gVars.getPlayersCompeting() & -gVars.getPlayersCompeting() ))/Math.log(2)) + 1); // The current player
@@ -292,7 +357,14 @@ public class GamePage extends AppCompatActivity {
             }
         });
 
-        PokerPhase(0);
+        int ressID = getResources().getIdentifier("backside_old", "drawable", "com.example.lepti.pokerapp");
+        userCard1View.setImageResource(ressID);
+        userCard2View.setImageResource(ressID);
+        tableCard1View.setImageResource(ressID);
+        tableCard2View.setImageResource(ressID);
+        tableCard3View.setImageResource(ressID);
+        tableCard4View.setImageResource(0);
+        tableCard5View.setImageResource(0);
 
         foldButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -308,47 +380,55 @@ public class GamePage extends AppCompatActivity {
                 checkButton.setVisibility(View.GONE);
                 foldButton.setVisibility(View.GONE);
                 raiseButton.setVisibility(View.GONE);
-                Toast.makeText(GamePage.this, "You checked!", LENGTH_SHORT).show();
+                //Toast.makeText(GamePage.this, "You checked!", LENGTH_SHORT).show();
                 switchPlayer();
             }
         });
     }
-    private void nextTurn() {
-        if(playerTurn == totalPlayers-1) {
-            // Call next phase
-        }
-        else {
-            playerTurn++;
-            // send message to the player in question
-        }
-        return;
-    }
 
     private int rankHandName(String handName) {
-       if(handName == "One Pair") return 1;
-       else if(handName == "Two Pairs") return 2;
-       else if(handName == "Three of a Kind") return 3;
-       else if(handName == "Straight") return 4;
-       else if(handName == "Flush") return 5;
-       else if(handName == "Full House") return 6;
-       else if(handName == "Four of a Kind") return 7;
-       else if(handName == "Straight Flush") return 8;
-       else if(handName == "Royal Flush") return 9;
+       if(handName.equals("One Pair")) {
+           return 1;
+       }
+       else if(handName.equals("Two Pairs")) {
+           return 2;
+       }
+       else if(handName.equals("Three of a Kind")) {
+           return 3;
+       }
+       else if(handName.equals("Straight")) {
+           return 4;
+       }
+       else if(handName.equals("Flush")) {
+           return 5;
+       }
+       else if(handName.equals("Full House")) {
+           return 6;
+       }
+       else if(handName.equals("Four of a Kind")) {
+           return 7;
+       }
+       else if(handName.equals("Straight Flush")) {
+           return 8;
+       }
+       else if(handName.equals("Royal Flush")) {
+           return 9;
+       }
        else return 0;
     }
 
     private void updateHands() {
-        int currentWinnerRank = rankHandName(tCards.getWinningHand());
-        int playerHandRank = rankHandName(user.getBestHandName());
         FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference updateGlobal = database.getReference("game-1/variables/");
+        DatabaseReference updateGlobal = database.getReference("game-1/table-cards/");
+        int darank = rankHandName(tCards.getWinningHand());
+        int playerHandRank = rankHandName(user.getBestHandName());
 
-        if(playerHandRank > currentWinnerRank) {
-            tCards.setTableCard1(userBestHand[0]);
-            tCards.setTableCard2(userBestHand[1]);
-            tCards.setTableCard3(userBestHand[2]);
-            tCards.setTableCard4(userBestHand[3]);
-            tCards.setTableCard5(userBestHand[4]);
+        if(playerHandRank > darank) {
+            tCards.setWinningCard1(userBestHand[0]);
+            tCards.setWinningCard2(userBestHand[1]);
+            tCards.setWinningCard3(userBestHand[2]);
+            tCards.setWinningCard4(userBestHand[3]);
+            tCards.setWinningCard5(userBestHand[4]);
             tCards.setWinningHand(user.getBestHandName());
 
             updateGlobal.setValue(tCards);
@@ -360,20 +440,20 @@ public class GamePage extends AppCompatActivity {
             winningPlayerEx.add(userSpot);
             updateGlobal.setValue(winningPlayerEx);
         }
-        else if(playerHandRank == currentWinnerRank) {
+        else if(playerHandRank == darank) {
             int trigger = 0;
-            if(tCards.getTableCard1() < userBestHand[0]) trigger = 1;
-            else if(tCards.getTableCard2() < userBestHand[1]) trigger = 1;
-            else if(tCards.getTableCard3() < userBestHand[2]) trigger = 1;
-            else if(tCards.getTableCard4() < userBestHand[3]) trigger = 1;
-            else if(tCards.getTableCard5() < userBestHand[4]) trigger = 1;
+            if((tCards.getWinningCard1() != 0 && tCards.getWinningCard1() < userBestHand[0]) || (tCards.getWinningCard1() == 0 && tCards.getWinningCard1() != userBestHand[0])) trigger = 1;
+            else if((tCards.getWinningCard2() != 0 && tCards.getWinningCard2() < userBestHand[0]) || (tCards.getWinningCard2() == 0 && tCards.getWinningCard2() != userBestHand[0])) trigger = 1;
+            else if((tCards.getWinningCard3() != 0 && tCards.getWinningCard3() < userBestHand[0]) || (tCards.getWinningCard3() == 0 && tCards.getWinningCard3() != userBestHand[0])) trigger = 1;
+            else if((tCards.getWinningCard4() != 0 && tCards.getWinningCard4() < userBestHand[0]) || (tCards.getWinningCard4() == 0 && tCards.getWinningCard4() != userBestHand[0])) trigger = 1;
+            else if((tCards.getWinningCard5() != 0 && tCards.getWinningCard5() < userBestHand[0]) || (tCards.getWinningCard5() == 0 && tCards.getWinningCard5() != userBestHand[0])) trigger = 1;
 
             if(trigger == 1) {
-                tCards.setTableCard1(userBestHand[0]);
-                tCards.setTableCard2(userBestHand[1]);
-                tCards.setTableCard3(userBestHand[2]);
-                tCards.setTableCard4(userBestHand[3]);
-                tCards.setTableCard5(userBestHand[4]);
+                tCards.setWinningCard1(userBestHand[0]);
+                tCards.setWinningCard2(userBestHand[1]);
+                tCards.setWinningCard3(userBestHand[2]);
+                tCards.setWinningCard4(userBestHand[3]);
+                tCards.setWinningCard5(userBestHand[4]);
                 updateGlobal.setValue(tCards);
 
                 updateGlobal = database.getReference("game-1/winner/");
@@ -383,6 +463,7 @@ public class GamePage extends AppCompatActivity {
                 winningPlayerEx.add(userSpot);
                 updateGlobal.setValue(winningPlayerEx);
 
+
             }
             else {
                 updateGlobal = database.getReference("game-1/winner/");
@@ -390,12 +471,41 @@ public class GamePage extends AppCompatActivity {
                 updateGlobal.setValue(winningPlayers);
             }
         }
+        switchPlayer();
         return;
     }
 
+    private void resetGame() {
+        /* reset the winner field */
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference updateGlobal = database.getReference("game-1/winner/");
+        updateGlobal.removeValue();
+
+        /* reset table-cards */
+        updateGlobal = database.getReference("game-1/table-cards/");
+        updateGlobal.setValue(new TableCards());
+
+        /* reset cards used */
+        updateGlobal = database.getReference("game-1/cards/");
+        updateGlobal.removeValue();
+
+        gVars.setCurrentRound(-1);
+        gVars.setReadyPlayers(0);
+        gVars.setHasSomeonePlayed(false);
+        gVars.setPlayersCompeting(0);
+        gVars.setPlayerTurn(0);
+
+        updateGlobal = database.getReference("game-1/variables/");
+        updateGlobal.setValue(gVars);
+    }
+
+    private void increaseUserMoney(int money) {
+        user.setMoney(user.getMoney()+money);
+        return;
+    }
     private void triggerRoundStartEvent(int currentRound) {
 
-        if(currentRound == 0) {
+        if(currentRound == 0 && (user.getCard1() == -1 || user.getCard2() == -1)) {
             generateCardsForPlayer();
         }
         if(currentRound > 0 && currentRound < 4) { // Distribute table cards on rounds 1, 2, 3
@@ -403,22 +513,22 @@ public class GamePage extends AppCompatActivity {
         }
         else if(currentRound == 4) { // Check hand on round 4
 
-            /* Update the user's hand in its database */
+            /* Update the user's hand in their database */
             String hand = getUserHand();
             user.setBestHandName(hand);
             FirebaseDatabase database = FirebaseDatabase.getInstance();
             DatabaseReference updateGlobal = database.getReference("game-1/player-variables/"+Integer.toString(userSpot));
             updateGlobal.setValue(user);
 
-            tCards.setTableCard1(userBestHand[0]);
-            tCards.setTableCard2(userBestHand[1]);
-            tCards.setTableCard3(userBestHand[2]);
-            tCards.setTableCard4(userBestHand[3]);
-            tCards.setTableCard5(userBestHand[4]);
+            tCards.setWinningCard1(userBestHand[0]);
+            tCards.setWinningCard2(userBestHand[1]);
+            tCards.setWinningCard3(userBestHand[2]);
+            tCards.setWinningCard4(userBestHand[3]);
+            tCards.setWinningCard5(userBestHand[4]);
             tCards.setState(4);
-            tCards.setWinningHand(getUserHand());
+            tCards.setWinningHand(user.getBestHandName());
 
-            updateGlobal = database.getReference("game-1/cards/");
+            updateGlobal = database.getReference("game-1/table-cards/");
             updateGlobal.setValue(tCards);
 
             winningPlayers.add(userSpot);
@@ -431,9 +541,20 @@ public class GamePage extends AppCompatActivity {
             raiseButton.setVisibility(View.GONE);
         }
         else if(currentRound == 5) { // Reveal results
-            Toast.makeText(getApplicationContext(),"Final round",Toast.LENGTH_LONG).show();
+            tCards.setState(5);
+            FirebaseDatabase database = FirebaseDatabase.getInstance();
+            DatabaseReference updateGlobal = database.getReference("game-1/table-cards/");
+            updateGlobal.setValue(tCards);
+            checkButton.setVisibility(View.GONE);
+            foldButton.setVisibility(View.GONE);
+            raiseButton.setVisibility(View.GONE);
             // Find winner
             // make winner win
+        }
+        else if(currentRound == 8 || currentRound == 6) {
+            checkButton.setVisibility(View.GONE);
+            foldButton.setVisibility(View.GONE);
+            raiseButton.setVisibility(View.GONE);
         }
 
         /* Update the global variables */
@@ -469,82 +590,6 @@ public class GamePage extends AppCompatActivity {
         }
 
         updateGlobal.setValue(gVars);
-    }
-
-    private String generateCard(int forced1, int forced2)
-    {
-        String suit;
-        String rank;
-        Integer number = 0;
-        do {
-            int min = 0;
-            int max = 3;
-            int random = new Random().nextInt((max - min) + 1) + min;
-            if(forced1 != -1) random=forced1;
-
-            if(random == 0) {
-                suit = "clubs";
-            }
-            else if(random == 1) {
-                suit = "diamonds";
-            }
-            else if(random == 2) {
-                suit = "spades";
-            }
-            else {
-                suit = "hearts";
-            }
-            number = random*13;
-
-            min = 0;
-            max = 12;
-            random = new Random().nextInt((max - min) + 1) + min;
-            if(forced2 != -1) random=forced2;
-            if(random == 0) {
-                rank = "ace_of_";
-            }
-            else if(random == 1) {
-                rank = "c2_of_";
-            }
-            else if(random == 2) {
-                rank = "c3_of_";
-            }
-            else if(random == 3) {
-                rank = "c4_of_";
-            }
-            else if(random == 4) {
-                rank = "c5_of_";
-            }
-            else if(random == 5) {
-                rank = "c6_of_";
-            }
-            else if(random == 6) {
-                rank = "c7_of_";
-            }
-            else if(random == 7) {
-                rank = "c8_of_";
-            }
-            else if(random == 8) {
-                rank = "c9_of_";
-            }
-            else if(random == 9) {
-                rank = "c10_of_";
-            }
-            else if(random == 10) {
-                rank = "jack_of_";
-            }
-            else if(random == 11) {
-                rank = "queen_of_";
-            }
-            else {
-                rank = "king_of_";
-            }
-            number = number+random;
-        }
-        while (cardsInUse.contains(number));
-        cardsInUse.add(number);
-        userDeckOfCards[currId] = number;
-        return (rank+suit);
     }
 
     private void showPlayerAvatar(int playerId) {
@@ -605,13 +650,13 @@ public class GamePage extends AppCompatActivity {
         if(rank == 0) {
             cardRank = "ace";
         }
-        else if(rank > 0 && rank < 9) {
+        else if(rank > 0 && rank < 10) {
             cardRank = "c" + Integer.toString((rank+1));
         }
         else if(rank == 10) {
             cardRank = "jack";
         }
-        else if(rank == 10) {
+        else if(rank == 11) {
             cardRank =  "queen";
         }
         else {
@@ -702,81 +747,7 @@ public class GamePage extends AppCompatActivity {
         int layoutId = (playerId+(4-userSpot))%4;
         playerAvatarLayout[layoutId-1].setVisibility(View.GONE);
     }
-    private String generatePlayerCards(int playerid, int cardid, int forced1, int forced2)
-    {
-        String suit;
-        String rank;
-        Integer number = 0;
-        do {
-            int min = 0;
-            int max = 3;
-            int random = new Random().nextInt((max - min) + 1) + min;
-            if(forced1 != -1) random=forced1;
 
-            if(random == 0) {
-                suit = "clubs";
-            }
-            else if(random == 1) {
-                suit = "diamonds";
-            }
-            else if(random == 2) {
-                suit = "spades";
-            }
-            else {
-                suit = "hearts";
-            }
-            number = random*13;
-
-            min = 0;
-            max = 12;
-            random = new Random().nextInt((max - min) + 1) + min;
-            if(forced2 != -1) random=forced2;
-            if(random == 0) {
-                rank = "ace_of_";
-            }
-            else if(random == 1) {
-                rank = "c2_of_";
-            }
-            else if(random == 2) {
-                rank = "c3_of_";
-            }
-            else if(random == 3) {
-                rank = "c4_of_";
-            }
-            else if(random == 4) {
-                rank = "c5_of_";
-            }
-            else if(random == 5) {
-                rank = "c6_of_";
-            }
-            else if(random == 6) {
-                rank = "c7_of_";
-            }
-            else if(random == 7) {
-                rank = "c8_of_";
-            }
-            else if(random == 8) {
-                rank = "c9_of_";
-            }
-            else if(random == 9) {
-                rank = "c10_of_";
-            }
-            else if(random == 10) {
-                rank = "jack_of_";
-            }
-            else if(random == 11) {
-                rank = "queen_of_";
-            }
-            else {
-                rank = "king_of_";
-            }
-            number = number+random;
-        }
-        while (cardsInUse.contains(number));
-        cardsInUse.add(number);
-        userDeckOfCards[cardid] = number;
-        return (rank+suit);
-    }
     public String getUserHand() {
 
         userDeckOfCards[0] = user.getCard1();
@@ -789,13 +760,13 @@ public class GamePage extends AppCompatActivity {
 
         /* We generate a TreeSet that contains all the player's cards */
         Set<Integer> allCards = new TreeSet<>();
-        allCards.add(userDeckOfCards[0]);
-        allCards.add(userDeckOfCards[1]);
-        allCards.add(userDeckOfCards[2]);
-        allCards.add(userDeckOfCards[3]);
-        allCards.add(userDeckOfCards[4]);
-        allCards.add(userDeckOfCards[5]);
-        allCards.add(userDeckOfCards[6]);
+        allCards.add(userDeckOfCards[0]%13);
+        allCards.add(userDeckOfCards[1]%13);
+        allCards.add(userDeckOfCards[2]%13);
+        allCards.add(userDeckOfCards[3]%13);
+        allCards.add(userDeckOfCards[4]%13);
+        allCards.add(userDeckOfCards[5]%13);
+        allCards.add(userDeckOfCards[6]%13);
         int firstRemoved = 0;
 
         /* We create a reverse set */
@@ -1007,7 +978,7 @@ public class GamePage extends AppCompatActivity {
             }
         }
 
-        if(results == "Three of a Kind") {
+        if(results.equals("Three of a Kind")) {
             /* We create a reverse set */
             Set<Integer> reverseAllCards = ((TreeSet<Integer>) allCards).descendingSet();
             Iterator<Integer> iterator;
@@ -1026,7 +997,7 @@ public class GamePage extends AppCompatActivity {
                 i++;
             }
         }
-        else if(results == "One Pair") {
+        else if(results.equals("One Pair")) {
             /* We create a reverse set */
             Set<Integer> reverseAllCards = ((TreeSet<Integer>) allCards).descendingSet();
             Iterator<Integer> iterator;
@@ -1102,227 +1073,5 @@ public class GamePage extends AppCompatActivity {
             results = "Straight";
         }
         return results;
-    }
-    private int PokerPhase(int phase) {
-        switch (phase) {
-            case 0:
-            {
-                int resID = getResources().getIdentifier("backside_old", "drawable", "com.example.lepti.pokerapp");
-                userCard1View.setImageResource(resID);
-                userCard2View.setImageResource(resID);
-                tableCard1View.setImageResource(resID);
-                tableCard2View.setImageResource(resID);
-                tableCard3View.setImageResource(resID);
-                tableCard4View.setImageResource(0);
-                tableCard5View.setImageResource(0);
-                break;
-            }
-            case 1:
-            {
-                String Card1 = generateCard(-1, -1);
-                currId = 3;
-                String Card2 = generateCard(-1, -1);
-                currId = 4;
-                String Card3 = generateCard(-1, -1);
-                int resID = getResources().getIdentifier(Card1, "drawable", "com.example.lepti.pokerapp");
-                tableCard1View.setImageResource(resID);
-                resID = getResources().getIdentifier(Card2, "drawable", "com.example.lepti.pokerapp");
-                tableCard2View.setImageResource(resID);
-                resID = getResources().getIdentifier(Card3, "drawable", "com.example.lepti.pokerapp");
-                tableCard3View.setImageResource(resID);
-                break;
-            }
-            case 2:
-            {
-
-                String Card1 = generatePlayerCards(0, 0, -1, -1);
-                String Card2 = generatePlayerCards(0, 1, -1, -1);
-                int resID = getResources().getIdentifier(Card1, "drawable", "com.example.lepti.pokerapp");
-                userCard1View.setImageResource(resID);
-                resID = getResources().getIdentifier(Card2, "drawable", "com.example.lepti.pokerapp");
-                userCard2View.setImageResource(resID);
-                break;
-            }
-            case 3:
-            {
-                currId = 5;
-                String Card1 = generateCard(-1, -1);
-                int resID = getResources().getIdentifier(Card1, "drawable", "com.example.lepti.pokerapp");
-                tableCard4View.setImageResource(resID);
-                break;
-            }
-            case 4:
-            {
-                currId = 6;
-                String Card1 = generateCard(-1, -1);
-                int resID = getResources().getIdentifier(Card1, "drawable", "com.example.lepti.pokerapp");
-                tableCard5View.setImageResource(resID);
-                break;
-            }
-            case 5:
-            {
-                ArrayList<Integer> pairs = new ArrayList<>();
-                String results = "No Pair";
-                for(int i = 0; i < 6; i++) {
-                    for(int y = i+1; y < 7; y++ ) {
-                        if((userDeckOfCards[i]%13) == (userDeckOfCards[y]%13)) {
-                            pairs.add((userDeckOfCards[i]%13));
-                            break;
-                        }
-                    }
-                }
-                int highestStraightFlush = -1;
-                int highestStraight = -1;
-                for(int i = 0; i < 7; i++) {
-                    int middleCardRank = (userDeckOfCards[i])%13;
-                    if( middleCardRank > 1 && middleCardRank < 12) {
-                        boolean[] straightFound = new boolean[4];
-                        straightFound[0] = false;
-                        straightFound[1] = false;
-                        straightFound[2] = false;
-                        straightFound[3] = false;
-                        boolean isFlush = true;
-                        int flushSuit = Math.floorDiv(userDeckOfCards[i], 13);
-                        for(int u = 0; u < 7; u++) {
-                            if(u == i) continue;
-                            if( ( (middleCardRank+1) %13 ) == ( (userDeckOfCards[u]) %13 ) && straightFound[2] == false) {
-                                straightFound[2] = true;
-                                if(flushSuit != Math.floorDiv(userDeckOfCards[u], 13) && isFlush) {
-                                    boolean doesSameSuitExist = false;
-                                    for(int y = u+1; y < 7; y++) {
-                                        if(y == i) continue;
-                                        if(( (userDeckOfCards[u]) %13 ) == ( (userDeckOfCards[y]) %13 ) && flushSuit == Math.floorDiv(userDeckOfCards[y], 13)) {
-                                            doesSameSuitExist = true;
-                                            break;
-                                        }
-                                    }
-                                    isFlush = doesSameSuitExist;
-                                }
-                            }
-                            if( ( (middleCardRank+2) %13 ) == ( (userDeckOfCards[u]) %13 )  && straightFound[3] == false) {
-                                straightFound[3] = true;
-                                if(flushSuit != Math.floorDiv(userDeckOfCards[u], 13) && isFlush) {
-                                    boolean doesSameSuitExist = false;
-                                    for(int y = u+1; y < 7; y++) {
-                                        if(y == i) continue;
-                                        if(( (userDeckOfCards[u]) %13 ) == ( (userDeckOfCards[y]) %13 ) && flushSuit == Math.floorDiv(userDeckOfCards[y], 13)) {
-                                            doesSameSuitExist = true;
-                                            break;
-                                        }
-                                    }
-                                    isFlush = doesSameSuitExist;
-                                }
-                            }
-                            if( ( (middleCardRank-1) %13 ) == ( (userDeckOfCards[u]) %13 )  && straightFound[1] == false) {
-                                straightFound[1] = true;
-                                if(flushSuit != Math.floorDiv(userDeckOfCards[u], 13) && isFlush) {
-                                    boolean doesSameSuitExist = false;
-                                    for(int y = u+1; y < 7; y++) {
-                                        if(y == i) continue;
-                                        if(( (userDeckOfCards[u]) %13 ) == ( (userDeckOfCards[y]) %13 ) && flushSuit == Math.floorDiv(userDeckOfCards[y], 13)) {
-                                            doesSameSuitExist = true;
-                                            break;
-                                        }
-                                    }
-                                    isFlush = doesSameSuitExist;
-                                }
-                            }
-                            if( ( (middleCardRank-2) %13 ) == ( (userDeckOfCards[u]) %13 )  && straightFound[0] == false) {
-                                straightFound[0] = true;
-                                if(flushSuit != Math.floorDiv(userDeckOfCards[u], 13) && isFlush) {
-                                    boolean doesSameSuitExist = false;
-                                    for(int y = u+1; y < 7; y++) {
-                                        if(y == i) continue;
-                                        if(( (userDeckOfCards[u]) %13 ) == ( (userDeckOfCards[y]) %13 ) && flushSuit == Math.floorDiv(userDeckOfCards[y], 13)) {
-                                            doesSameSuitExist = true;
-                                            break;
-                                        }
-                                    }
-                                    isFlush = doesSameSuitExist;
-                                }
-                            }
-                        }
-                        if(straightFound[0] && straightFound[1] && straightFound[2] && straightFound[3]) {
-                            int newHighest = (middleCardRank+2) %13;
-                            if(highestStraight < newHighest || newHighest == 0) highestStraight = newHighest ;
-                            if((highestStraightFlush < newHighest || newHighest == 0 )&& isFlush) highestStraightFlush = newHighest;
-                        }
-                    }
-                }
-                Set<Integer> flushSet = new HashSet<Integer>();
-                for(int u = 0; u < 3; u++) {
-                    for(int i = 0; i < 7; i++) {
-                        int cardRank = (userDeckOfCards[i])%13;
-                        if(Math.floorDiv(userDeckOfCards[i], 13) == u) {
-                            flushSet.add(cardRank);
-                        }
-                    }
-                    if(flushSet.size() < 5) {
-                        flushSet.clear();
-                    }
-                    else {
-                        break;
-                    }
-                }
-
-
-                Set<Integer> unique = new HashSet<>(pairs);
-                Map<Integer, Integer> unsortedMap = new HashMap<>();
-                for (Integer key : unique) {
-                    Integer numberOfSimilarCards = Collections.frequency(pairs, key)+1;
-                    unsortedMap.put(key, numberOfSimilarCards); // insert in the map
-                    System.out.println("PAIRS: Rank " + Integer.toString(key) + " has " + Integer.toString(numberOfSimilarCards));
-                }
-
-                List<Map.Entry<Integer, Integer>> list = new LinkedList<Map.Entry<Integer, Integer>>(unsortedMap.entrySet());
-
-                Collections.sort(list, new Comparator<Map.Entry<Integer, Integer>>() {
-                    public int compare(Map.Entry<Integer, Integer> o1,
-                                       Map.Entry<Integer, Integer> o2) {
-                        return (o1.getValue()).compareTo(o2.getValue());
-                    }
-                });
-                Map<Integer, Integer> sortedMap = new LinkedHashMap<Integer, Integer>();
-                for (Map.Entry<Integer, Integer> entry : list) {
-                    sortedMap.put(entry.getKey(), entry.getValue());
-                }
-                int entryId = 0;
-                for (Map.Entry<Integer, Integer> entry : sortedMap.entrySet()) {
-                    entryId++;
-                    if(entry.getValue() == 4) {
-                        results = "Four of a Kind";
-                        break;
-                    }
-                    if(entry.getValue() == 3) results = "Three of a Kind";
-                    if(( entryId == 2 || entryId == 3) && results.equals("Three of a Kind") && entry.getValue() == 2) {
-                        results = "Full House";
-                        break;
-                    }
-                    if(entry.getValue() == 2 && results.equals("One Pair")) {
-                        results = "Two Pairs";
-                        System.out.println("PAIRS: GET CALLED");
-                        break;
-                    }
-                    else if(entry.getValue() == 2) {
-                        results = "One Pair";
-                    }
-                }
-                System.out.println("PAIRS: Called " + Integer.toString(entryId));
-                if(highestStraightFlush == 0) {
-                    results = "Royal Flush";
-                }
-                else if(highestStraightFlush != -1) {
-                    results = "Straight Flush";
-                }
-                else if(!results.equals("Four of a Kind") && !results.equals("Full House") && !flushSet.isEmpty()) {
-                    results = "Flush";
-                }
-                else if(!results.equals("Four of a Kind") && !results.equals("Full House") && highestStraight != -1) {
-                    results = "Straight";
-                }
-                Toast.makeText(getApplicationContext(),results,LENGTH_SHORT).show();
-            }
-        }
-        return 1;
     }
 }

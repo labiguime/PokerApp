@@ -6,6 +6,11 @@ public class TableCards {
     int tableCard3;
     int tableCard4;
     int tableCard5;
+    int winningCard1;
+    int winningCard2;
+    int winningCard3;
+    int winningCard4;
+    int winningCard5;
     int state;
     String winningHand;
 
@@ -15,8 +20,53 @@ public class TableCards {
         tableCard3 = -1;
         tableCard4 = -1;
         tableCard5 = -1;
+        winningCard1 = -1;
+        winningCard2 = -1;
+        winningCard3 = -1;
+        winningCard4 = -1;
+        winningCard5 = -1;
         state = 0;
         winningHand = "No Pair";
+    }
+
+    public int getWinningCard1() {
+        return winningCard1;
+    }
+
+    public void setWinningCard1(int winningCard1) {
+        this.winningCard1 = winningCard1;
+    }
+
+    public int getWinningCard2() {
+        return winningCard2;
+    }
+
+    public void setWinningCard2(int winningCard2) {
+        this.winningCard2 = winningCard2;
+    }
+
+    public int getWinningCard3() {
+        return winningCard3;
+    }
+
+    public void setWinningCard3(int winningCard3) {
+        this.winningCard3 = winningCard3;
+    }
+
+    public int getWinningCard4() {
+        return winningCard4;
+    }
+
+    public void setWinningCard4(int winningCard4) {
+        this.winningCard4 = winningCard4;
+    }
+
+    public int getWinningCard5() {
+        return winningCard5;
+    }
+
+    public void setWinningCard5(int winningCard5) {
+        this.winningCard5 = winningCard5;
     }
 
     public String getWinningHand() {
