@@ -9,6 +9,7 @@ public class PlayerVariables {
     int money;
     int lastRoundPlayed;
     int currentBet;
+    Boolean hasPlayerFolded;
 
    public PlayerVariables() {
         this.nickname = "Nobody";
@@ -18,6 +19,7 @@ public class PlayerVariables {
         card2 = -1;
         money = 10000;
         lastRoundPlayed = -1;
+        hasPlayerFolded = false;
     }
 
     public PlayerVariables(String nickname, String avatar) {
@@ -29,6 +31,15 @@ public class PlayerVariables {
         money = 10000;
         currentBet = 0;
         lastRoundPlayed = -1;
+        hasPlayerFolded = false;
+    }
+
+    public Boolean getHasPlayerFolded() {
+        return hasPlayerFolded;
+    }
+
+    public void setHasPlayerFolded(Boolean hasPlayerFolded) {
+        this.hasPlayerFolded = hasPlayerFolded;
     }
 
     public int getCurrentBet() {

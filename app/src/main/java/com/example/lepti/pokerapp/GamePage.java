@@ -99,20 +99,11 @@ public class GamePage extends AppCompatActivity {
     ImageView raiseButton;
     ImageView increaseBetButton;
     ImageView decreaseBetButton;
-
-
     MediaPlayer mp;
     int localRaiseAmount = 0;
-
-    int playerTurn = 0;
-    int currId = 2;
     int[] userDeckOfCards = new int[7];
     int[] userBestHand = new int[5];
-
-    int phase = 1;
-    int totalPlayers = 1;
-
-    ArrayList<Integer> cardsInUse  = new ArrayList<Integer>();
+    int[] pId = new int[3];
 
     List<Integer> cardsUsed  = new ArrayList<>();
     List<Integer> winningPlayers = new ArrayList<>();
@@ -120,6 +111,9 @@ public class GamePage extends AppCompatActivity {
     GameVariables gVars;
     TableCards tCards = new TableCards();
     List<Integer> nextPlayerInLine = new ArrayList<>();
+
+    int lastRoundRecorded = -1;
+    int lastPlayerTurnRecorded = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -254,7 +248,7 @@ public class GamePage extends AppCompatActivity {
         userCard1View.setVisibility(View.INVISIBLE);
         userCard2View.setVisibility(View.INVISIBLE);
         hideAllButtons();
-        Log.d("dbg::", "phase0x");
+
         increaseBetButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -293,7 +287,6 @@ public class GamePage extends AppCompatActivity {
                 }
             }
         });
-        Log.d("dbg::", "phase3");
         /* Keep global variables up-to-date */
         DatabaseReference gameVariables = database.getReference("game-1/variables");
         ValueEventListener gameVariablesListener = new ValueEventListener() {
@@ -302,9 +295,13 @@ public class GamePage extends AppCompatActivity {
                 gVars = dataSnapshot.getValue(GameVariables.class);
                 totalBetText.setText("$"+Integer.toString(gVars.getTotalBet()));
                 currentBetText.setText("$"+Integer.toString(gVars.getRoundBet()));
+                if(lastRoundRecorded == gVars.getCurrentRound() && lastPlayerTurnRecorded == gVars.getPlayerTurn()) return;
 
                 if(gVars.getPlayerTurn() != userSpot+1 && gVars.getCurrentRound() != -1) {
+                    lastRoundRecorded = gVars.getCurrentRound();
+                    lastPlayerTurnRecorded = gVars.getPlayerTurn();
                     int resID = getResources().getIdentifier(user.getAvatar()+ "_notfolded", "drawable", "com.example.lepti.pokerapp");
+                    if(user.getHasPlayerFolded()) resID = getResources().getIdentifier(user.getAvatar()+ "_folded", "drawable", "com.example.lepti.pokerapp");
                     userAvatar.setBackgroundResource(resID);
 
                     DatabaseReference gameSpots = database.getReference("game-1/free-spots");
@@ -330,7 +327,8 @@ public class GamePage extends AppCompatActivity {
                     });
                 }
                 if(gVars.getCurrentRound() == -1) {
-
+                    lastRoundRecorded = gVars.getCurrentRound();
+                    lastPlayerTurnRecorded = gVars.getPlayerTurn();
                     /* Fading out the user's card */
                     fadeCardAway(userCard1View);
                     fadeCardAway(userCard2View);
@@ -364,6 +362,7 @@ public class GamePage extends AppCompatActivity {
                     user.setBestHandName("No Pair");
                     user.setCurrentBet(0);
                     user.setLastRoundPlayed(-1);
+                    user.setHasPlayerFolded(false);
                     DatabaseReference db = database.getReference("game-1/player-variables/"+Integer.toString(userSpot));
                     db.setValue(user);
 
@@ -374,9 +373,36 @@ public class GamePage extends AppCompatActivity {
                     totalBetText.setText("$0");
                     currentBetText.setText("$0");
 
+                    int resID = getResources().getIdentifier(user.getAvatar()+ "_notfolded", "drawable", "com.example.lepti.pokerapp");
+                    userAvatar.setBackgroundResource(resID);
+
+                    DatabaseReference gameSpots = database.getReference("game-1/free-spots");
+                    gameSpots.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                if(Integer.parseInt(snapshot.getKey()) != userSpot) {
+                                    if(snapshot.getValue(Boolean.class) == true) {
+                                        hidePlayerAvatar(Integer.parseInt(snapshot.getKey()));
+                                    }
+                                    else {
+                                        showPlayerAvatar(Integer.parseInt(snapshot.getKey()));
+                                    }
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });
+
                     Toast.makeText(GamePage.this, "Shuffling the new deck...", Toast.LENGTH_SHORT).show();
                 }
                 else if(gVars.getPlayerTurn() == userSpot+1) {
+                    lastRoundRecorded = gVars.getCurrentRound();
+                    lastPlayerTurnRecorded = gVars.getPlayerTurn();
                     //if((user.getLastRoundPlayed() == gVars.getCurrentRound() && gVars.getCurrentRound() != 0)) return;
 
                     user.setLastRoundPlayed(gVars.getCurrentRound());
@@ -435,6 +461,8 @@ public class GamePage extends AppCompatActivity {
                     }
                 }
                 else if(gVars.getHasSomeonePlayed() == false && gVars.getCurrentRound() == 0 && gVars.getPlayerTurn() > 0) {
+                    lastRoundRecorded = gVars.getCurrentRound();
+                    lastPlayerTurnRecorded = gVars.getPlayerTurn();
                     hideAllButtons();
                     if(playerAvatarLayout[0].getVisibility() == View.VISIBLE) {
                         Animation fade_in = AnimationUtils.loadAnimation(GamePage.this, R.anim.fade_in);
@@ -466,7 +494,80 @@ public class GamePage extends AppCompatActivity {
                     totalBetBox.setVisibility(View.VISIBLE);
                     currentBetBox.setVisibility(View.VISIBLE);
                 }
+                else if(gVars.getCurrentRound() == 5) {
+                    lastRoundRecorded = gVars.getCurrentRound();
+                    lastPlayerTurnRecorded = gVars.getPlayerTurn();
+                    hideAllButtons();
+
+                    if(playerAvatarLayout[0].getVisibility() == View.VISIBLE) {
+                        DatabaseReference pReference = database.getReference("game-1/player-variables/"+Integer.toString(pId[0]));
+                        pReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                PlayerVariables layoutPlayerVariables = dataSnapshot.getValue(PlayerVariables.class);
+
+                                pMoneyText[0].setText(Integer.toString(layoutPlayerVariables.getMoney()));
+                                int resID = getResources().getIdentifier(layoutPlayerVariables.getAvatar()+"_notfolded", "drawable", "com.example.lepti.pokerapp");
+                                if(layoutPlayerVariables.getHasPlayerFolded()) return;
+                                pAvatar[0].setBackgroundResource(resID);
+                                revealCard(p2Card1, returnCardName(layoutPlayerVariables.getCard1()));
+                                revealCard(p2Card2, returnCardName(layoutPlayerVariables.getCard2()));
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
+                                Log.w("TAG", "loadPost:onCancelled", databaseError.toException());
+                            }
+                        });
+                    }
+
+                    if(playerAvatarLayout[1].getVisibility() == View.VISIBLE) {
+                        DatabaseReference pReference = database.getReference("game-1/player-variables/"+Integer.toString(pId[1]));
+                        pReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                PlayerVariables layoutPlayerVariables = dataSnapshot.getValue(PlayerVariables.class);
+
+                                pMoneyText[1].setText(Integer.toString(layoutPlayerVariables.getMoney()));
+                                int resID = getResources().getIdentifier(layoutPlayerVariables.getAvatar()+"_notfolded", "drawable", "com.example.lepti.pokerapp");
+                                if(layoutPlayerVariables.getHasPlayerFolded()) return;
+                                pAvatar[1].setBackgroundResource(resID);
+                                revealCard(p3Card1, returnCardName(layoutPlayerVariables.getCard1()));
+                                revealCard(p3Card2, returnCardName(layoutPlayerVariables.getCard2()));
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
+                                Log.w("TAG", "loadPost:onCancelled", databaseError.toException());
+                            }
+                        });
+                    }
+
+                    if(playerAvatarLayout[2].getVisibility() == View.VISIBLE) {
+                        DatabaseReference pReference = database.getReference("game-1/player-variables/"+Integer.toString(pId[2]));
+                        pReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                PlayerVariables layoutPlayerVariables = dataSnapshot.getValue(PlayerVariables.class);
+
+                                pMoneyText[2].setText(Integer.toString(layoutPlayerVariables.getMoney()));
+                                int resID = getResources().getIdentifier(layoutPlayerVariables.getAvatar()+"_notfolded", "drawable", "com.example.lepti.pokerapp");
+                                if(layoutPlayerVariables.getHasPlayerFolded()) return;
+                                pAvatar[2].setBackgroundResource(resID);
+                                revealCard(p4Card1, returnCardName(layoutPlayerVariables.getCard1()));
+                                revealCard(p4Card2, returnCardName(layoutPlayerVariables.getCard2()));
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
+                                Log.w("TAG", "loadPost:onCancelled", databaseError.toException());
+                            }
+                        });
+                    }
+                }
                 else {
+                    lastRoundRecorded = gVars.getCurrentRound();
+                    lastPlayerTurnRecorded = gVars.getPlayerTurn();
                     hideAllButtons();
                 }
 
@@ -735,15 +836,16 @@ public class GamePage extends AppCompatActivity {
                 }
                 else if(tCards.getState() == 5) { // time to get your winnings
                     if(user.getLastRoundPlayed() != 8) {
-                        hideAllButtons();
+                        //hideAllButtons();
                         user.setLastRoundPlayed(8);
-                        boolean hasUserWon = false;
                         for(int i = 0; i < winningPlayers.size(); i++) {
                             if(winningPlayers.get(i) == userSpot) {
                                 Toast.makeText(GamePage.this, "Congratulations! You won!", Toast.LENGTH_SHORT).show();
-                                hasUserWon = true;
                                 increaseUserMoney(Math.floorDiv(gVars.getTotalBet(), winningPlayers.size()));
                                 break;
+                            }
+                            if(i == winningPlayers.size()-1) {
+                                Toast.makeText(GamePage.this, "You lost!", Toast.LENGTH_SHORT).show();
                             }
                         }
                         if(winningPlayers.get(winningPlayers.size()-1) == userSpot) {
@@ -753,11 +855,33 @@ public class GamePage extends AppCompatActivity {
                                 public void run() {
                                     resetGame();
                                     timer.cancel();
-                                }}, 7000);
+                                }}, 5000);
                         }
-                        if(!hasUserWon) {
-                            Toast.makeText(GamePage.this, "You lost!", Toast.LENGTH_SHORT).show();
+                        //DatabaseReference updateGlobal = database.getReference("game-1/player-variables/"+Integer.toString(userSpot));
+                        //updateGlobal.setValue(user);
+                    }
+                }
+                else if(tCards.getState() == 6) {
+                    if(user.getLastRoundPlayed() != 8) {
+                        user.setLastRoundPlayed(8);
+                        if(user.getHasPlayerFolded()) {
+                            Toast.makeText(GamePage.this, "Winner found! End of the round.", Toast.LENGTH_SHORT).show();
                         }
+                        else {
+                            increaseUserMoney(gVars.getTotalBet());
+                            Toast.makeText(GamePage.this, "Your opponent folded. You won!", Toast.LENGTH_SHORT).show();
+                            final Timer timer = new Timer();
+                            timer.schedule(new TimerTask() {
+                                @Override
+                                public void run() {
+                                    resetGame();
+                                    timer.cancel();
+                                }
+                            }, 4000);
+                        }
+                        user.setHasPlayerFolded(false);
+                        DatabaseReference updateGlobal = database.getReference("game-1/player-variables/"+Integer.toString(userSpot));
+                        updateGlobal.setValue(user);
                     }
                 }
             }
@@ -866,6 +990,7 @@ public class GamePage extends AppCompatActivity {
                     gVars.setPlayerTurn(getNextInLine()+1);//);
                     gVars.setRoundBeginnerId(gVars.getPlayerTurn()-1);
                     gVars.setHasSomeonePlayed(false);
+                    gVars.setOldPlayersCompeting(gVars.getPlayersCompeting());
                     DatabaseReference ref = database.getReference("game-1/players-queue");
                     ref.setValue(nextPlayerInLine);
                 }
@@ -889,6 +1014,39 @@ public class GamePage extends AppCompatActivity {
         foldButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                hideAllButtons();
+                gVars.setPlayersCompeting(gVars.getPlayersCompeting() - (int)(Math.pow(2, userSpot)));
+                user.setHasPlayerFolded(true);
+                int var = 0;
+                for(int i =0; i < 3; i++) {
+                    if(isKthBitSet(gVars.getPlayersCompeting(), i+1)) var++;
+                }
+
+                int resID = getResources().getIdentifier(user.getAvatar()+ "_folded", "drawable", "com.example.lepti.pokerapp");
+                userAvatar.setBackgroundResource(resID);
+
+                if(var == 1) {
+
+                    user.setLastRoundPlayed(8);
+                    DatabaseReference updateGlobal = database.getReference("game-1/player-variables/"+Integer.toString(userSpot));
+                    updateGlobal.setValue(user);
+
+
+                    tCards.setState(6);
+
+                    updateGlobal = database.getReference("game-1/table-cards/");
+                    updateGlobal.setValue(tCards);
+
+                    Toast.makeText(GamePage.this, "You lost!", Toast.LENGTH_SHORT).show();
+                    // there was only one opponent
+                }
+                else {
+                    DatabaseReference updateGlobal = database.getReference("game-1/player-variables/"+Integer.toString(userSpot));
+                    updateGlobal.setValue(user);
+                    switchPlayer();
+                }
+
+
                 //PokerPhase(phase);
                 //phase++;
             }
@@ -1335,6 +1493,8 @@ public class GamePage extends AppCompatActivity {
         gVars.setTotalBet(0);
         gVars.setRoundBet(0);
         gVars.setPlayerTurn(0);
+        gVars.setPlayersCompeting(gVars.getOldPlayersCompeting());
+
         //gVars.setPlayersCompeting(0);
 
         updateGlobal = database.getReference("game-1/variables/");
@@ -1436,34 +1596,82 @@ public class GamePage extends AppCompatActivity {
             hideAllButtons();
         }
         else if(currentRound == 5) { // Reveal results
-            tCards.setState(5);
             FirebaseDatabase database = FirebaseDatabase.getInstance();
-            DatabaseReference updateGlobal = database.getReference("game-1/table-cards/");
-            updateGlobal.setValue(tCards);
-            gVars.setPlayerTurn(0);
-            hideAllButtons();
-            user.setLastRoundPlayed(8);
-            boolean hasUserWon = false;
-            for(int i = 0; i < winningPlayers.size(); i++) {
-                if(winningPlayers.get(i) == userSpot) {
-                    Toast.makeText(GamePage.this, "Congratulations! You won!", Toast.LENGTH_SHORT).show();
-                    hasUserWon = true;
-                    increaseUserMoney(Math.floorDiv(gVars.getTotalBet(), winningPlayers.size()));
-                    break;
-                }
-            }
-            if(winningPlayers.get(winningPlayers.size()-1) == userSpot) {
-                final Timer timer = new Timer();
-                timer.schedule(new TimerTask() {
+
+            if(playerAvatarLayout[0].getVisibility() == View.VISIBLE) {
+                DatabaseReference pReference = database.getReference("game-1/player-variables/"+Integer.toString(pId[0]));
+                pReference.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
-                    public void run() {
-                        resetGame();
-                        timer.cancel();
-                    }}, 7000);
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        PlayerVariables layoutPlayerVariables = dataSnapshot.getValue(PlayerVariables.class);
+
+                        pMoneyText[0].setText(Integer.toString(layoutPlayerVariables.getMoney()));
+                        if(layoutPlayerVariables.getHasPlayerFolded()) return;
+                        int resID = getResources().getIdentifier(layoutPlayerVariables.getAvatar()+"_notfolded", "drawable", "com.example.lepti.pokerapp");
+                        pAvatar[0].setBackgroundResource(resID);
+                        revealCard(p2Card1, returnCardName(layoutPlayerVariables.getCard1()));
+                        revealCard(p2Card2, returnCardName(layoutPlayerVariables.getCard2()));
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Log.w("TAG", "loadPost:onCancelled", databaseError.toException());
+                    }
+                });
             }
-            if(!hasUserWon) {
-                Toast.makeText(GamePage.this, "You lost!", Toast.LENGTH_SHORT).show();
+
+            if(playerAvatarLayout[1].getVisibility() == View.VISIBLE) {
+                DatabaseReference pReference = database.getReference("game-1/player-variables/"+Integer.toString(pId[1]));
+                pReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        PlayerVariables layoutPlayerVariables = dataSnapshot.getValue(PlayerVariables.class);
+
+                        pMoneyText[1].setText(Integer.toString(layoutPlayerVariables.getMoney()));
+                        if(layoutPlayerVariables.getHasPlayerFolded()) return;
+                        int resID = getResources().getIdentifier(layoutPlayerVariables.getAvatar()+"_notfolded", "drawable", "com.example.lepti.pokerapp");
+                        pAvatar[1].setBackgroundResource(resID);
+                        revealCard(p3Card1, returnCardName(layoutPlayerVariables.getCard1()));
+                        revealCard(p3Card2, returnCardName(layoutPlayerVariables.getCard2()));
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Log.w("TAG", "loadPost:onCancelled", databaseError.toException());
+                    }
+                });
             }
+
+            if(playerAvatarLayout[2].getVisibility() == View.VISIBLE) {
+                DatabaseReference pReference = database.getReference("game-1/player-variables/"+Integer.toString(pId[2]));
+                pReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        PlayerVariables layoutPlayerVariables = dataSnapshot.getValue(PlayerVariables.class);
+
+                        pMoneyText[2].setText(Integer.toString(layoutPlayerVariables.getMoney()));
+                        if(layoutPlayerVariables.getHasPlayerFolded()) return;
+                        int resID = getResources().getIdentifier(layoutPlayerVariables.getAvatar()+"_notfolded", "drawable", "com.example.lepti.pokerapp");
+                        pAvatar[2].setBackgroundResource(resID);
+                        revealCard(p4Card1, returnCardName(layoutPlayerVariables.getCard1()));
+                        revealCard(p4Card2, returnCardName(layoutPlayerVariables.getCard2()));
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Log.w("TAG", "loadPost:onCancelled", databaseError.toException());
+                    }
+                });
+            }
+
+            final Timer timer = new Timer();
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    winnerReveal();
+                    timer.cancel();
+                }}, 3000);
+            hideAllButtons();
         }
         else if(currentRound == 8 || currentRound == 6) {
             hideAllButtons();
@@ -1480,6 +1688,13 @@ public class GamePage extends AppCompatActivity {
         }
     }
 
+    private void winnerReveal() {
+        tCards.setState(5);
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference updateGlobal = database.getReference("game-1/table-cards/");
+        updateGlobal.setValue(tCards);
+    }
+
     private void switchPlayer() {
         /* Hide the buttons */
         hideAllButtons();
@@ -1490,6 +1705,7 @@ public class GamePage extends AppCompatActivity {
 
 
         int resID = getResources().getIdentifier(user.getAvatar()+ "_notfolded", "drawable", "com.example.lepti.pokerapp");
+        if(user.getHasPlayerFolded()) resID = getResources().getIdentifier(user.getAvatar()+ "_folded", "drawable", "com.example.lepti.pokerapp");
         userAvatar.setBackgroundResource(resID);
 
         /* The round at the beginning of the round was the one this user currently has */
@@ -1521,6 +1737,7 @@ public class GamePage extends AppCompatActivity {
     private void showPlayerAvatar(final int playerId) {
         final int layoutId = (playerId+(4-userSpot))%4;
         Log.d("IDD:", "Spot "+ Integer.toString(userSpot)+ " playerId=" +Integer.toString(playerId) + " layoutId=" + Integer.toString(layoutId) );
+        pId[layoutId-1] = playerId;
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference pReference = database.getReference("game-1/player-variables/"+Integer.toString(playerId));
         pReference.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -1529,11 +1746,14 @@ public class GamePage extends AppCompatActivity {
                 PlayerVariables layoutPlayerVariables = dataSnapshot.getValue(PlayerVariables.class);
 
                 /* Change the layout with the user's information*/
-                pMoneyText[layoutId-1].setText(Integer.toString(layoutPlayerVariables.getMoney()));
+                pMoneyText[layoutId-1].setText("$"+Integer.toString(layoutPlayerVariables.getMoney()));
                 pNicknameText[layoutId-1].setText(layoutPlayerVariables.getNickname());
                 int resID = getResources().getIdentifier(layoutPlayerVariables.getAvatar()+"_notfolded", "drawable", "com.example.lepti.pokerapp");
                 if(gVars.getPlayerTurn() == playerId+1) {
                     resID = getResources().getIdentifier(layoutPlayerVariables.getAvatar()+"_yourturn", "drawable", "com.example.lepti.pokerapp");
+                }
+                if(layoutPlayerVariables.getHasPlayerFolded()) {
+                    resID = getResources().getIdentifier(layoutPlayerVariables.getAvatar()+"_folded", "drawable", "com.example.lepti.pokerapp");
                 }
                 pAvatar[layoutId-1].setBackgroundResource(resID);
 

@@ -12,6 +12,7 @@ public class GameVariables {
     int roundStartBet;
     Boolean hasSomeonePlayed;
     int roundBeginnerId;
+    int oldPlayersCompeting;
 
     public GameVariables() {
         roundBet = 0;
@@ -25,6 +26,15 @@ public class GameVariables {
         roundStartBet = 0;
         hasSomeonePlayed = false;
         roundBeginnerId = 0;
+        oldPlayersCompeting = 0;
+    }
+
+    public int getOldPlayersCompeting() {
+        return oldPlayersCompeting;
+    }
+
+    public void setOldPlayersCompeting(int oldPlayersCompeting) {
+        this.oldPlayersCompeting = oldPlayersCompeting;
     }
 
     public int getRoundBeginnerId() {
