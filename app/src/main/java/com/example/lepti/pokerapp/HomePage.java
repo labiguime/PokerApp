@@ -1,8 +1,15 @@
 package com.example.lepti.pokerapp;
 
+import android.animation.Animator;
+import android.animation.AnimatorInflater;
+import android.animation.AnimatorSet;
+import android.app.ActionBar;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.graphics.drawable.Drawable;
 import android.media.Image;
+import android.media.MediaPlayer;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -13,6 +20,8 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.view.animation.LinearInterpolator;
+import android.view.animation.RotateAnimation;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -35,25 +44,51 @@ public class HomePage extends AppCompatActivity {
     ImageView app_logo;
     Animation fromtop;
     Integer avatarPictureId = 0;
-    CardView join_button;
+    ImageView join_button;
     ImageView avatarPicture;
     EditText nicknameTextBox;
-    Button changePictureButton;
+    ImageView changePictureButton;
     Map<String, Boolean> freeSpots = new HashMap<>();
     GameVariables gVars;
+    MediaPlayer mp;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_page);
 
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+       // View decorView = getWindow().getDecorView();
+// Hide the status bar.
+        //int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
+       // decorView.setSystemUiVisibility(uiOptions);
+
+        mp = MediaPlayer.create(HomePage.this, R.raw.background_music);
+        mp.setLooping(true);
+        mp.start();
+
+        View decorView = getWindow().getDecorView();
+        decorView.setOnSystemUiVisibilityChangeListener
+                (new View.OnSystemUiVisibilityChangeListener() {
+                    @Override
+                    public void onSystemUiVisibilityChange(int visibility) {
+                        if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
+                            getWindow().getDecorView().setSystemUiVisibility(
+                                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                                            | View.SYSTEM_UI_FLAG_FULLSCREEN
+                                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+                        } else {
+                        }
+                    }
+                });
 
         app_logo = (ImageView) findViewById(R.id.hp_app_logo);
         nicknameTextBox = findViewById(R.id.nicknameTextBox);
         changePictureButton = findViewById(R.id.changePictureButton);
         avatarPicture = (ImageView) findViewById(R.id.avatarPicture);
         fromtop = AnimationUtils.loadAnimation(this, R.anim.fromtop);
-
         final FirebaseDatabase database = FirebaseDatabase.getInstance();
         /* Keep global variables up-to-date */
         DatabaseReference gameVariables = database.getReference("game-1/variables");
@@ -87,14 +122,12 @@ public class HomePage extends AppCompatActivity {
         join_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                Intent myIntent = new Intent(HomePage.this, GamePage.class);
                 String nickname = nicknameTextBox.getText().toString();
 
-                /*if(nickname.isEmpty()) {
+                if(nickname.isEmpty()) {
                     Toast.makeText(getApplicationContext(),"You must choose a nickname!",Toast.LENGTH_SHORT).show();
-                }*/
-                if(nickname.length() > 15) {
+                }
+                else if(nickname.length() > 15) {
                     Toast.makeText(getApplicationContext(),"Your nickname is too long!",Toast.LENGTH_SHORT).show();
                 }
                 else {
@@ -130,6 +163,29 @@ public class HomePage extends AppCompatActivity {
             }
         });
     }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+            getWindow().getDecorView().setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_FULLSCREEN
+                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mp.stop();
+        mp.release();
+
+    }
+
     private void joinGame(int gameSpot) {
         if(gameSpot == -1) {
             // Cannot join the game

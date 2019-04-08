@@ -1,481 +1,776 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@drawable/gradient_background"
-    tools:context=".GamePage">
+    tools:context=".GamePage"
+    android:background="@drawable/background_gradient">
 
-    <LinearLayout
+
+
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/constraintLayoutMain"
         android:layout_width="match_parent"
-        android:layout_height="36dp"
-        android:orientation="vertical">
+        android:layout_height="wrap_content"
+        android:background="@drawable/poker_table"
+        app:layout_constraintBottom_toTopOf="@id/linearLayoutBottom"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
-            android:id="@+id/totalBetText"
-            android:layout_width="match_parent"
+        <LinearLayout
+            android:id="@+id/totalBetBox"
+            android:layout_width="124dp"
+            android:layout_height="35dp"
+            android:layout_marginTop="56dp"
+            android:layout_marginEnd="8dp"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="@+id/constraintLayoutMain"
+            app:layout_constraintHorizontal_bias="0.901"
+            app:layout_constraintStart_toStartOf="@+id/constraintLayoutMain"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/totalTextUseless"
+                android:layout_width="4dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                android:text="Total"
+                android:textColor="@color/common_google_signin_btn_text_dark_default"
+                android:textSize="11dp" />
+
+            <ImageView
+                android:id="@+id/chipImage1"
+                android:layout_width="5dp"
+                android:layout_height="34dp"
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                app:srcCompat="@drawable/gambling_chip" />
+
+            <TextView
+                android:id="@+id/totalBetText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                android:text="$10000"
+                android:textColor="@color/common_google_signin_btn_text_dark_default"
+                android:textSize="10dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/currentBetBox"
+            android:layout_width="159dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.956"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/totalBetBox">
+
+            <TextView
+                android:id="@+id/currentBetUselessText"
+                android:layout_width="20dp"
+                android:layout_height="25dp"
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                android:text="Current minimum"
+                android:textColor="@color/common_google_signin_btn_text_dark_default"
+                android:textSize="10dp" />
+
+            <ImageView
+                android:id="@+id/chipImage2"
+                android:layout_width="5dp"
+                android:layout_height="34dp"
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                app:srcCompat="@drawable/gambling_chip" />
+
+            <TextView
+                android:id="@+id/currentBetText"
+                android:layout_width="45dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                android:text="$0"
+                android:textColor="@color/common_google_signin_btn_text_dark_default"
+                android:textSize="10dp" />
+        </LinearLayout>
+
+        <android.support.constraint.Guideline
+            android:id="@+id/guideline4"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="0" />
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="0.5" />
 
-        <RelativeLayout
-            android:id="@+id/layout_player_1"
-            android:layout_width="211dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="center">
+
+        <LinearLayout
+            android:id="@+id/tableCardsLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toTopOf="@+id/layout_player_0"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/layout_player_1">
 
             <LinearLayout
-                android:layout_width="60dp"
-                android:layout_height="match_parent"
-                android:layout_marginRight="-60dp"
-                android:layout_toLeftOf="@id/p2Avatar"
-                android:orientation="horizontal">
+                android:layout_width="40dp"
+                android:layout_height="90dp"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/tableCard5"
+                    android:layout_width="40dp"
+                    android:layout_height="55dp"
+                    android:layout_marginTop="20dp"
+                    android:layout_gravity="center"
+                    app:srcCompat="@drawable/backside_old" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="40dp"
+                android:layout_height="90dp"
+                android:layout_marginLeft="7dp"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/tableCard1"
+                    android:layout_width="40dp"
+                    android:layout_height="55dp"
+                    android:layout_marginTop="20dp"
+                    app:srcCompat="@drawable/backside_old" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="40dp"
+                android:layout_height="90dp"
+                android:layout_marginLeft="7dp"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/tableCard2"
+                    android:layout_width="40dp"
+                    android:layout_height="55dp"
+                    android:layout_marginTop="20dp"
+                    app:srcCompat="@drawable/backside_old" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="40dp"
+                android:layout_height="90dp"
+                android:layout_marginLeft="7dp"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/tableCard3"
+                    android:layout_width="40dp"
+                    android:layout_height="55dp"
+                    android:layout_marginTop="20dp"
+                    app:srcCompat="@drawable/backside_old" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="40dp"
+                android:layout_height="90dp"
+                android:layout_marginLeft="7dp"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/tableCard4"
+                    android:layout_width="40dp"
+                    android:layout_height="55dp"
+                    android:layout_marginTop="20dp"
+                    app:srcCompat="@drawable/backside_old" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layout_player_0"
+            android:layout_width="220dp"
+            android:layout_height="97dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.476"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <LinearLayout
+                android:layout_width="70dp"
+                android:layout_height="49dp"
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                tools:layout_editor_absoluteX="219dp"
+                tools:layout_editor_absoluteY="168dp">
+
+                <ImageView
+                    android:id="@+id/userCard2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    app:srcCompat="@drawable/backside_old" />
+
+                <ImageView
+                    android:id="@+id/userCard1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    app:srcCompat="@drawable/backside_old" />
+            </LinearLayout>
+
+            <android.support.constraint.ConstraintLayout
+                android:id="@+id/userAvatar"
+                android:layout_width="130dp"
+                android:layout_height="50dp"
+                android:layout_gravity="center"
+                android:background="@drawable/avatar1_folded"
+                tools:layout_editor_absoluteX="289dp"
+                tools:layout_editor_absoluteY="162dp">
+
+                <TextView
+                    android:id="@+id/userNicknameText"
+                    android:layout_width="68dp"
+                    android:layout_height="12dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:text="TextView"
+                    android:textColor="@color/common_google_signin_btn_text_dark_default"
+                    android:textSize="9sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="1.0"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintVertical_bias="0.0" />
+
+                <TextView
+                    android:id="@+id/userMoneyText"
+                    android:layout_width="68dp"
+                    android:layout_height="12dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:text="TextView"
+                    android:textColor="@color/common_google_signin_btn_text_dark_default"
+                    android:textSize="9sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="1.0"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintVertical_bias="1.0" />
+
+                <android.support.constraint.Guideline
+                    android:id="@+id/p1Guideline1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintGuide_percent="0.25" />
+
+                <android.support.constraint.Guideline
+                    android:id="@+id/p1Guideline2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintGuide_percent="0.5" />
+
+                <android.support.constraint.Guideline
+                    android:id="@+id/p1Guideline3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintGuide_percent="0.75" />
+
+                <android.support.constraint.Guideline
+                    android:id="@+id/p1Guideline4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    app:layout_constraintGuide_percent="0.42" />
+            </android.support.constraint.ConstraintLayout>
+
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:id="@+id/layout_player_2"
+            android:layout_width="177dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="30dp"
+            android:layout_marginTop="92dp"
+            android:layout_marginEnd="8dp"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.015"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <LinearLayout
+                android:layout_width="61dp"
+                android:layout_height="47dp"
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                tools:layout_editor_absoluteX="219dp"
+                tools:layout_editor_absoluteY="168dp">
+
+                <ImageView
+                    android:id="@+id/p3Card2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    app:srcCompat="@drawable/backside_old" />
+
+                <ImageView
+                    android:id="@+id/p3Card1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    app:srcCompat="@drawable/backside_old" />
+            </LinearLayout>
+
+            <android.support.constraint.ConstraintLayout
+                android:id="@+id/p3Avatar"
+                android:layout_width="120dp"
+                android:layout_height="45dp"
+                android:layout_gravity="center"
+                android:background="@drawable/avatar1_folded"
+                tools:layout_editor_absoluteX="289dp"
+                tools:layout_editor_absoluteY="162dp">
+
+                <TextView
+                    android:id="@+id/p3NicknameText"
+                    android:layout_width="64dp"
+                    android:layout_height="12dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:text="TextView"
+                    android:textColor="@color/common_google_signin_btn_text_dark_default"
+                    android:textSize="8sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="1.0"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintVertical_bias="0.0" />
+
+                <TextView
+                    android:id="@+id/p3MoneyText"
+                    android:layout_width="64dp"
+                    android:layout_height="12dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:text="TextView"
+                    android:textColor="@color/common_google_signin_btn_text_dark_default"
+                    android:textSize="8sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="1.0"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintVertical_bias="1.0" />
+
+                <android.support.constraint.Guideline
+                    android:id="@+id/p3Guideline1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintGuide_percent="0.25" />
+
+                <android.support.constraint.Guideline
+                    android:id="@+id/p3Guideline2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintGuide_percent="0.5" />
+
+                <android.support.constraint.Guideline
+                    android:id="@+id/p3Guideline3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintGuide_percent="0.75" />
+
+                <android.support.constraint.Guideline
+                    android:id="@+id/p3Guideline4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    app:layout_constraintGuide_percent="0.39" />
+            </android.support.constraint.ConstraintLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layout_player_3"
+            android:layout_width="175dp"
+            android:layout_height="57dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="30dp"
+            android:layout_marginBottom="88dp"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <LinearLayout
+                android:layout_width="61dp"
+                android:layout_height="47dp"
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                tools:layout_editor_absoluteX="219dp"
+                tools:layout_editor_absoluteY="168dp">
+
+                <ImageView
+                    android:id="@+id/p4Card2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    app:srcCompat="@drawable/backside_old" />
+
+                <ImageView
+                    android:id="@+id/p4Card1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    app:srcCompat="@drawable/backside_old" />
+            </LinearLayout>
+
+            <android.support.constraint.ConstraintLayout
+                android:id="@+id/p4Avatar"
+                android:layout_width="120dp"
+                android:layout_height="45dp"
+                android:layout_gravity="center"
+                android:background="@drawable/avatar1_folded"
+                tools:layout_editor_absoluteX="289dp"
+                tools:layout_editor_absoluteY="162dp">
+
+                <TextView
+                    android:id="@+id/p4NicknameText"
+                    android:layout_width="64dp"
+                    android:layout_height="12dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:text="TextView"
+                    android:textColor="@color/common_google_signin_btn_text_dark_default"
+                    android:textSize="8sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="1.0"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintVertical_bias="0.0" />
+
+                <TextView
+                    android:id="@+id/p4MoneyText"
+                    android:layout_width="64dp"
+                    android:layout_height="12dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:text="TextView"
+                    android:textColor="@color/common_google_signin_btn_text_dark_default"
+                    android:textSize="8sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="1.0"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintVertical_bias="1.0" />
+
+                <android.support.constraint.Guideline
+                    android:id="@+id/p4Guideline1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintGuide_percent="0.25" />
+
+                <android.support.constraint.Guideline
+                    android:id="@+id/p4Guideline2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintGuide_percent="0.5" />
+
+                <android.support.constraint.Guideline
+                    android:id="@+id/p4Guideline3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintGuide_percent="0.75" />
+
+                <android.support.constraint.Guideline
+                    android:id="@+id/p4Guideline4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    app:layout_constraintGuide_percent="0.39" />
+            </android.support.constraint.ConstraintLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layout_player_1"
+            android:layout_width="211dp"
+            android:layout_height="90dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.526"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <LinearLayout
+                android:layout_width="70dp"
+                android:layout_height="49dp"
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                tools:layout_editor_absoluteX="219dp"
+                tools:layout_editor_absoluteY="168dp">
 
                 <ImageView
                     android:id="@+id/p2Card2"
-                    android:layout_width="20dp"
-                    android:layout_height="30dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
                     android:layout_gravity="center"
                     android:layout_weight="1"
                     app:srcCompat="@drawable/backside_old" />
 
                 <ImageView
                     android:id="@+id/p2Card1"
-                    android:layout_width="28dp"
-                    android:layout_height="30dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
                     android:layout_gravity="center"
                     android:layout_weight="1"
                     app:srcCompat="@drawable/backside_old" />
             </LinearLayout>
 
-            <ImageView
+            <android.support.constraint.ConstraintLayout
                 android:id="@+id/p2Avatar"
-                android:layout_width="37dp"
-                android:layout_height="match_parent"
-                android:layout_alignParentStart="true"
-                android:layout_alignParentTop="true"
-                android:layout_marginLeft="60dp"
-                app:srcCompat="@drawable/profile_icon" />
+                android:layout_width="130dp"
+                android:layout_height="50dp"
+                android:layout_gravity="center"
+                android:background="@drawable/avatar1_notfolded"
+                tools:layout_editor_absoluteX="289dp"
+                tools:layout_editor_absoluteY="162dp">
 
-            <LinearLayout
-                android:layout_width="133dp"
-                android:layout_height="match_parent"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:layout_marginEnd="0dp"
-                android:layout_toRightOf="@id/p2Avatar"
-                android:orientation="vertical">
-
-                <Button
+                <TextView
                     android:id="@+id/p2NicknameText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="26dp"
-                    android:layout_marginBottom="-10dp"
-                    android:text="Player 2"
-                    android:textAllCaps="false"
-                    android:textSize="5sp" />
+                    android:layout_width="68dp"
+                    android:layout_height="12dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:text="TextView"
+                    android:textColor="@color/common_google_signin_btn_text_dark_default"
+                    android:textSize="9sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="1.0"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintVertical_bias="0.0" />
 
-                <Button
+                <TextView
                     android:id="@+id/p2MoneyText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="26dp"
-                    android:text="$250.000"
-                    android:textAllCaps="false"
-                    android:textSize="5sp" />
-            </LinearLayout>
-        </RelativeLayout>
-    </LinearLayout>
+                    android:layout_width="68dp"
+                    android:layout_height="12dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:text="TextView"
+                    android:textColor="@color/common_google_signin_btn_text_dark_default"
+                    android:textSize="9sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="1.0"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintVertical_bias="1.0" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="223dp"
-        android:background="@drawable/poker_table"
-        android:orientation="vertical">
+                <android.support.constraint.Guideline
+                    android:id="@+id/guideline56"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintGuide_percent="0.25" />
+
+                <android.support.constraint.Guideline
+                    android:id="@+id/guideline86"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintGuide_percent="0.5" />
+
+                <android.support.constraint.Guideline
+                    android:id="@+id/guideline96"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintGuide_percent="0.75" />
+
+                <android.support.constraint.Guideline
+                    android:id="@+id/guideline66"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    app:layout_constraintGuide_percent="0.39" />
+            </android.support.constraint.ConstraintLayout>
+
+        </LinearLayout>
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="77dp"
-            android:orientation="horizontal">
-
-            <RelativeLayout
-                android:id="@+id/layout_player_2"
-                android:layout_width="273dp"
-                android:layout_height="match_parent"
-                android:layout_gravity="left"
-                android:layout_marginTop="-20dp"
-                android:layout_marginLeft="50dp">
-
-                <LinearLayout
-                    android:layout_width="60dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginRight="-60dp"
-                    android:layout_toLeftOf="@id/p3Avatar"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        android:id="@+id/p3Card2"
-                        android:layout_width="20dp"
-                        android:layout_height="30dp"
-                        android:layout_gravity="center"
-                        android:layout_weight="1"
-                        app:srcCompat="@drawable/backside_old" />
-
-                    <ImageView
-                        android:id="@+id/p3Card1"
-                        android:layout_width="28dp"
-                        android:layout_height="30dp"
-                        android:layout_gravity="center"
-                        android:layout_weight="1"
-                        app:srcCompat="@drawable/backside_old" />
-                </LinearLayout>
-
-                <ImageView
-                    android:id="@+id/p3Avatar"
-                    android:layout_width="37dp"
-                    android:layout_height="match_parent"
-                    android:layout_alignParentStart="true"
-                    android:layout_alignParentTop="true"
-                    android:layout_marginLeft="60dp"
-                    app:srcCompat="@drawable/profile_icon" />
-
-                <LinearLayout
-                    android:layout_width="141dp"
-                    android:layout_height="47dp"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    android:layout_marginEnd="35dp"
-                    android:layout_toRightOf="@id/p3Avatar"
-                    android:orientation="vertical">
-
-                    <Button
-                        android:id="@+id/p3NicknameText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="26dp"
-                        android:layout_marginBottom="-10dp"
-                        android:text="Player 3"
-                        android:textAllCaps="false"
-                        android:textSize="5sp" />
-
-                    <Button
-                        android:id="@+id/p3MoneyText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="26dp"
-                        android:text="$1.000.000"
-                        android:textAllCaps="false"
-                        android:textSize="5sp" />
-
-                </LinearLayout>
-            </RelativeLayout>
+            android:layout_width="88dp"
+            android:layout_height="93dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:id="@+id/readyBox"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
             <TextView
-                android:id="@+id/currentBetText"
-                android:layout_width="69dp"
-                android:layout_height="51dp"
-                android:layout_weight="1"
-                android:text="0" />
-
-            <RelativeLayout
-                android:id="@+id/layout_player_3"
-                android:layout_width="273dp"
-                android:layout_height="match_parent"
-                android:layout_gravity="right"
-                android:layout_marginTop="-20dp"
-                android:layout_marginLeft="100dp">
-
-                <LinearLayout
-                    android:layout_width="60dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginRight="-60dp"
-                    android:layout_toLeftOf="@id/p4Avatar"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        android:id="@+id/p4Card2"
-                        android:layout_width="20dp"
-                        android:layout_height="30dp"
-                        android:layout_gravity="center"
-                        android:layout_weight="1"
-                        app:srcCompat="@drawable/backside_old" />
-
-                    <ImageView
-                        android:id="@+id/p4Card1"
-                        android:layout_width="28dp"
-                        android:layout_height="30dp"
-                        android:layout_gravity="center"
-                        android:layout_weight="1"
-                        app:srcCompat="@drawable/backside_old" />
-                </LinearLayout>
-
-                <ImageView
-                    android:id="@+id/p4Avatar"
-                    android:layout_width="37dp"
-                    android:layout_height="match_parent"
-                    android:layout_alignParentStart="true"
-                    android:layout_alignParentTop="true"
-                    android:layout_marginLeft="60dp"
-                    app:srcCompat="@drawable/profile_icon" />
-
-                <LinearLayout
-                    android:layout_width="141dp"
-                    android:layout_height="47dp"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    android:layout_marginEnd="35dp"
-                    android:layout_toRightOf="@id/p4Avatar"
-                    android:orientation="vertical">
-
-                    <Button
-                        android:id="@+id/p4NicknameText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="26dp"
-                        android:layout_marginBottom="-10dp"
-                        android:text="Player 4"
-                        android:textAllCaps="false"
-                        android:textSize="5sp" />
-
-                    <Button
-                        android:id="@+id/p4MoneyText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="26dp"
-                        android:text="$1.250.000"
-                        android:textAllCaps="false"
-                        android:textSize="5sp" />
-
-                </LinearLayout>
-            </RelativeLayout>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="662dp"
-            android:layout_height="72dp"
-            android:orientation="horizontal">
-
-            <LinearLayout
-                android:layout_width="77dp"
-                android:layout_height="match_parent"
-                android:orientation="vertical">
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="525dp"
-                android:layout_height="match_parent"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="54dp"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical"></LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="415dp"
-                    android:layout_height="match_parent"
-                    android:orientation="horizontal">
-
-                    <LinearLayout
-                        android:layout_width="83dp"
-                        android:layout_height="match_parent"
-                        android:orientation="vertical">
-
-                        <ImageView
-                            android:id="@+id/tableCard5"
-                            android:layout_height="match_parent"
-                            android:layout_width="44dp"
-                            android:layout_gravity="center"
-                            app:srcCompat="@drawable/backside_old" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="83dp"
-                        android:layout_height="match_parent"
-                        android:orientation="vertical">
-
-                        <ImageView
-                            android:id="@+id/tableCard1"
-                            android:layout_width="44dp"
-                            android:layout_height="match_parent"
-                            android:layout_gravity="center"
-                            app:srcCompat="@drawable/backside_old" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="83dp"
-                        android:layout_height="match_parent"
-                        android:orientation="vertical">
-
-                        <ImageView
-                            android:id="@+id/tableCard2"
-                            android:layout_width="44dp"
-                            android:layout_height="match_parent"
-                            android:layout_gravity="center"
-                            app:srcCompat="@drawable/backside_old" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="83dp"
-                        android:layout_height="match_parent"
-                        android:orientation="vertical">
-
-                        <ImageView
-                            android:id="@+id/tableCard3"
-                            android:layout_width="44dp"
-                            android:layout_height="match_parent"
-                            android:layout_gravity="center"
-                            app:srcCompat="@drawable/backside_old" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="83dp"
-                        android:layout_height="match_parent"
-                        android:orientation="vertical">
-
-                        <ImageView
-                            android:id="@+id/tableCard4"
-                            android:layout_height="match_parent"
-                            android:layout_width="44dp"
-                            android:layout_gravity="center"
-                            app:srcCompat="@drawable/backside_old" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical"></LinearLayout>
-            </LinearLayout>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="73dp"
-            android:orientation="vertical">
-
-            <Button
-                android:id="@+id/readyButton"
-                android:layout_width="match_parent"
+                android:id="@+id/readyTextId"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Ready" />
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                android:text="Click when ready"
+                android:textColor="@color/common_google_signin_btn_text_dark_default"
+                android:textSize="11dp" />
+
+            <ImageView
+                android:id="@+id/readyButton"
+                android:layout_width="59dp"
+                android:layout_height="81dp"
+                android:layout_gravity="center"
+                android:clickable="true"
+                android:layout_weight="1"
+                app:srcCompat="@drawable/ready_button" />
+
         </LinearLayout>
-    </LinearLayout>
+
+
+    </android.support.constraint.ConstraintLayout>
 
     <LinearLayout
+        android:id="@+id/linearLayoutBottom"
         android:layout_width="match_parent"
-        android:layout_height="125dp"
-        android:orientation="vertical">
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/constraintLayoutMain"
+        tools:layout_editor_absoluteX="8dp">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="37dp"
-            android:orientation="vertical">
-
-            <RelativeLayout
-                android:id="@+id/layout_player_0"
-                android:layout_width="273dp"
-                android:layout_height="match_parent"
-                android:layout_gravity="center">
-
-                <LinearLayout
-                    android:layout_width="60dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginRight="-60dp"
-                    android:layout_toLeftOf="@id/userAvatar"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        android:id="@+id/userCard2"
-                        android:layout_width="20dp"
-                        android:layout_height="30dp"
-                        android:layout_gravity="center"
-                        android:layout_weight="1"
-                        app:srcCompat="@drawable/c10_of_diamonds" />
-
-                    <ImageView
-                        android:id="@+id/userCard1"
-                        android:layout_width="28dp"
-                        android:layout_height="30dp"
-                        android:layout_gravity="center"
-                        android:layout_weight="1"
-                        app:srcCompat="@drawable/ace_of_clubs" />
-                </LinearLayout>
-
-                <ImageView
-                    android:id="@+id/userAvatar"
-                    android:layout_width="37dp"
-                    android:layout_marginLeft="60dp"
-                    android:layout_height="match_parent"
-                    android:layout_alignParentStart="true"
-                    android:layout_alignParentTop="true"
-                    app:srcCompat="@drawable/profile_icon" />
-
-                <LinearLayout
-                    android:layout_width="133dp"
-                    android:layout_height="match_parent"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    android:layout_marginEnd="0dp"
-                    android:layout_toRightOf="@id/userAvatar"
-                    android:orientation="vertical">
-
-                    <Button
-                        android:id="@+id/userNicknameText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="26dp"
-                        android:layout_marginBottom="-10dp"
-                        android:text="User"
-                        android:clickable="false"
-                        android:textAllCaps="false"
-                        android:textSize="5sp" />
-
-                    <Button
-                        android:id="@+id/userMoneyText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="26dp"
-                        android:text="$1.500.000"
-                        android:clickable="false"
-                        android:textAllCaps="false"
-                        android:textSize="5sp" />
-
-                </LinearLayout>
-            </RelativeLayout>
-        </LinearLayout>
-
-        <LinearLayout
+        <ImageView
+            android:id="@+id/foldButton"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="horizontal">
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:clickable="true"
+            android:layout_weight="2"
+            app:srcCompat="@drawable/fold_button" />
 
-            <Button
-                android:id="@+id/foldButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="FOLD" />
+        <ImageView
+            android:id="@+id/checkButton"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="10dp"
+            android:clickable="true"
+            android:layout_marginRight="10dp"
+            android:layout_weight="2"
+            app:srcCompat="@drawable/check_button" />
 
-            <Button
-                android:id="@+id/checkButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="CHECK" />
+        <ImageView
+            android:id="@+id/decreaseRaise"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:layout_gravity="center"
+            android:layout_marginLeft="70dp"
+            android:clickable="true"
+            android:layout_weight="2"
+            app:srcCompat="@drawable/minus_button" />
 
-            <Button
-                android:id="@+id/raiseButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Raise" />
+        <LinearLayout
+            android:layout_width="62dp"
+            android:id="@+id/raiseLayout"
+            android:layout_height="56dp"
+            android:background="@drawable/bet_screen_image"
+            android:orientation="horizontal"
+            tools:layout_editor_absoluteX="8dp"
+            tools:layout_editor_absoluteY="162dp">
 
-            <EditText
+            <TextView
                 android:id="@+id/raiseEditText"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:ems="10"
-                android:hint="Type your bet"
-                android:inputType="number" />
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:textSize="12sp"
+                android:text="0"
+                android:textColor="@color/common_google_signin_btn_text_dark_default" />
         </LinearLayout>
+
+        <ImageView
+            android:id="@+id/increaseBet"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:layout_gravity="center"
+            android:layout_marginRight="70dp"
+            android:clickable="true"
+            android:layout_weight="2"
+            app:srcCompat="@drawable/plus_button" />
+
+        <ImageView
+            android:id="@+id/raiseButton"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="-50dp"
+            android:clickable="true"
+            android:layout_marginRight="50dp"
+            android:layout_weight="2"
+            app:srcCompat="@drawable/raise_button" />
+
     </LinearLayout>
-</LinearLayout>
+
+
+
+
+</android.support.constraint.ConstraintLayout>

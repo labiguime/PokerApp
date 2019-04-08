@@ -1,18 +1,27 @@
 package com.example.lepti.pokerapp;
 
 
+import android.animation.Animator;
+import android.animation.AnimatorInflater;
+import android.animation.AnimatorSet;
 import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
+import android.graphics.drawable.Drawable;
+import android.media.MediaPlayer;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,6 +32,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,15 +60,16 @@ import classes.TableCards;
 public class GamePage extends AppCompatActivity {
 
     int userSpot;
-    ImageView userAvatar;
-    Button userNicknameText;
-    Button userMoneyText;
-    Button readyButton;
+    ConstraintLayout userAvatar;
+    TextView userNicknameText;
+    TextView userMoneyText;
+    ImageView readyButton;
 
-    ImageView[] pAvatar = new ImageView[3];
-    Button[] pNicknameText = new Button[3];
-    Button[] pMoneyText = new Button[3];
-    Button foldButton;
+    ConstraintLayout[] pAvatar = new ConstraintLayout[3];
+    TextView[] pNicknameText = new TextView[3];
+    TextView[] pMoneyText = new TextView[3];
+
+    ImageView foldButton;
     ImageView userCard1View;
     ImageView userCard2View;
     ImageView tableCard1View;
@@ -65,13 +77,32 @@ public class GamePage extends AppCompatActivity {
     ImageView tableCard3View;
     ImageView tableCard4View;
     ImageView tableCard5View;
+    ImageView p2Card1;
+    ImageView p2Card2;
+    TextView readyTextId;
+    ImageView p3Card1;
+    ImageView p3Card2;
+
+    ImageView p4Card1;
+    ImageView p4Card2;
+
     TextView totalBetText;
     TextView currentBetText;
-    EditText raiseEditText;
-    RelativeLayout[] playerAvatarLayout = new RelativeLayout[3];
-    Button checkButton;
-    Button raiseButton;
+    LinearLayout raiseLayout;
+    LinearLayout tableCardsLayout;
+    LinearLayout totalBetBox;
+    LinearLayout currentBetBox;
+    LinearLayout readyBox;
+    TextView raiseText;
+    LinearLayout[] playerAvatarLayout = new LinearLayout[3];
+    ImageView checkButton;
+    ImageView raiseButton;
+    ImageView increaseBetButton;
+    ImageView decreaseBetButton;
 
+
+    MediaPlayer mp;
+    int localRaiseAmount = 0;
 
     int playerTurn = 0;
     int currId = 2;
@@ -98,41 +129,83 @@ public class GamePage extends AppCompatActivity {
 
         final FirebaseDatabase database = FirebaseDatabase.getInstance();
 
-        /* Assigning a variable to each view */
-        pAvatar[0] = findViewById(R.id.p2Avatar);
-        pAvatar[1] = findViewById(R.id.p3Avatar);
-        pAvatar[2] = findViewById(R.id.p4Avatar);
+        Log.d("dbg::", "phase0");
 
-        pNicknameText[0] = findViewById(R.id.p2NicknameText);
-        pNicknameText[1] = findViewById(R.id.p3NicknameText);
-        pNicknameText[2] = findViewById(R.id.p4NicknameText);
+        View decorView = getWindow().getDecorView();
+        decorView.setOnSystemUiVisibilityChangeListener
+                (new View.OnSystemUiVisibilityChangeListener() {
+                    @Override
+                    public void onSystemUiVisibilityChange(int visibility) {
+                        if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
+                            getWindow().getDecorView().setSystemUiVisibility(
+                                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                                            | View.SYSTEM_UI_FLAG_FULLSCREEN
+                                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+                        } else {
+                        }
+                    }
+                });
 
-        pMoneyText[0] = findViewById(R.id.p2MoneyText);
-        pMoneyText[1] = findViewById(R.id.p3MoneyText);
-        pMoneyText[2] = findViewById(R.id.p4MoneyText);
+        mp = MediaPlayer.create(this, R.raw.background_music);
+        mp.setLooping(true);
+        mp.start();
 
-        raiseEditText = findViewById(R.id.raiseEditText);
-        userAvatar = findViewById(R.id.userAvatar);
-        userNicknameText = findViewById(R.id.userNicknameText);
-        userMoneyText = findViewById(R.id.userMoneyText);
-        checkButton = findViewById(R.id.checkButton);
-        userCard1View = findViewById(R.id.userCard1);
         userCard2View = findViewById(R.id.userCard2);
         tableCard1View = findViewById(R.id.tableCard1);
         tableCard2View = findViewById(R.id.tableCard2);
         tableCard3View = findViewById(R.id.tableCard3);
         tableCard4View = findViewById(R.id.tableCard4);
         tableCard5View = findViewById(R.id.tableCard5);
-
+        Log.d("dbg::", "phase01");
+        readyBox = findViewById(R.id.readyBox);
         totalBetText = findViewById(R.id.totalBetText);
         currentBetText = findViewById(R.id.currentBetText);
+        currentBetBox = findViewById(R.id.currentBetBox);
+        totalBetBox = findViewById(R.id.totalBetBox);
+        pNicknameText[0] = findViewById(R.id.p2NicknameText);
+        pNicknameText[1] = findViewById(R.id.p3NicknameText);
+        pNicknameText[2] = findViewById(R.id.p4NicknameText);
+        pMoneyText[0] = findViewById(R.id.p2MoneyText);
+        pMoneyText[1] = findViewById(R.id.p3MoneyText);
+        pMoneyText[2] = findViewById(R.id.p4MoneyText);
+        Log.d("dbg::", "phase011");
+        readyTextId = findViewById(R.id.readyTextId);
+        Log.d("dbg::", "phase0112");
+        raiseText = findViewById(R.id.raiseEditText);
+        tableCardsLayout = findViewById(R.id.tableCardsLayout);
+        raiseLayout = findViewById(R.id.raiseLayout);
+        decreaseBetButton = findViewById(R.id.decreaseRaise);
+        increaseBetButton = findViewById(R.id.increaseBet);
 
+        userAvatar = findViewById(R.id.userAvatar);
+        userNicknameText = findViewById(R.id.userNicknameText);
+        userMoneyText = findViewById(R.id.userMoneyText);
+        userCard1View = findViewById(R.id.userCard1);
+
+        p2Card1 = findViewById(R.id.p2Card1);
+        p2Card2 = findViewById(R.id.p2Card2);
+
+        p3Card1 = findViewById(R.id.p3Card1);
+        p3Card2 = findViewById(R.id.p3Card2);
+
+        p4Card1 = findViewById(R.id.p4Card1);
+        p4Card2 = findViewById(R.id.p4Card2);
         playerAvatarLayout[0] = findViewById(R.id.layout_player_1);
         playerAvatarLayout[1] = findViewById(R.id.layout_player_2);
         playerAvatarLayout[2] = findViewById(R.id.layout_player_3);
+
+        checkButton = findViewById(R.id.checkButton);
         foldButton = findViewById(R.id.foldButton);
         readyButton = findViewById(R.id.readyButton);
         raiseButton = findViewById(R.id.raiseButton);
+
+        /* Assigning a variable to each view */
+        pAvatar[0] = findViewById(R.id.p2Avatar);
+        pAvatar[1] = findViewById(R.id.p3Avatar);
+        pAvatar[2] = findViewById(R.id.p4Avatar);
         /* Recovering the extras */
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
@@ -141,28 +214,122 @@ public class GamePage extends AppCompatActivity {
         }
 
         /* Setting up the UI */
-        int resID = getResources().getIdentifier(user.getAvatar(), "drawable", "com.example.lepti.pokerapp");
-        userAvatar.setImageResource(resID);
+        int resID = getResources().getIdentifier(user.getAvatar()+ "_notfolded", "drawable", "com.example.lepti.pokerapp");
+        userAvatar.setBackgroundResource(resID);
         userNicknameText.setText(user.getNickname());
-        userMoneyText.setText(Integer.toString(user.getMoney()));
-        foldButton.setVisibility(View.GONE);
-        checkButton.setVisibility(View.GONE);
+        userMoneyText.setText("$"+Integer.toString(user.getMoney()));
+        foldButton.setVisibility(View.INVISIBLE);
+        checkButton.setVisibility(View.INVISIBLE);
+        readyBox.setVisibility(View.VISIBLE);
         readyButton.setVisibility(View.VISIBLE);
-        raiseButton.setVisibility(View.GONE);
-        playerAvatarLayout[0].setVisibility(View.GONE);
-        playerAvatarLayout[1].setVisibility(View.GONE);
-        playerAvatarLayout[2].setVisibility(View.GONE);
+        raiseButton.setVisibility(View.INVISIBLE);
+        currentBetBox.setVisibility(View.INVISIBLE);
+        totalBetBox.setVisibility(View.INVISIBLE);
 
+        tableCardsLayout.setVisibility(View.INVISIBLE);
+        foldButton.setClickable(false);
+        checkButton.setClickable(false);
+        raiseButton.setClickable(false);
+        increaseBetButton.setClickable(false);
+        decreaseBetButton.setClickable(false);
+        increaseBetButton.setVisibility(View.INVISIBLE);
+        decreaseBetButton.setVisibility(View.INVISIBLE);
+        raiseText.setVisibility(View.INVISIBLE);
+        raiseLayout.setVisibility(View.INVISIBLE);
+        playerAvatarLayout[0].setVisibility(View.INVISIBLE);
+        playerAvatarLayout[1].setVisibility(View.INVISIBLE);
+        playerAvatarLayout[2].setVisibility(View.INVISIBLE);
+
+        tableCardsLayout.setVisibility(View.INVISIBLE);
+
+        p2Card1.setVisibility(View.INVISIBLE);
+        p2Card2.setVisibility(View.INVISIBLE);
+
+        p3Card1.setVisibility(View.INVISIBLE);
+        p3Card2.setVisibility(View.INVISIBLE);
+
+        p4Card1.setVisibility(View.INVISIBLE);
+        p4Card2.setVisibility(View.INVISIBLE);
+
+        userCard1View.setVisibility(View.INVISIBLE);
+        userCard2View.setVisibility(View.INVISIBLE);
         hideAllButtons();
+        Log.d("dbg::", "phase0x");
+        increaseBetButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(gVars.getRoundBet() == 0) {
+                    if(localRaiseAmount == 0) {
+                        localRaiseAmount = 200;
+                        raiseText.setText(Integer.toString(localRaiseAmount));
+                    }
+                    else {
+                        localRaiseAmount = localRaiseAmount+200;
+                        raiseText.setText(Integer.toString(localRaiseAmount));
+                    }
+                }
+                else {
+                    if(localRaiseAmount < gVars.getRoundBet()) {
+                        localRaiseAmount = gVars.getRoundBet();
+                        raiseText.setText(Integer.toString(localRaiseAmount));
+                        // update text
+                    }
+                    else {
+                        localRaiseAmount = localRaiseAmount+200;
+                        raiseText.setText(Integer.toString(localRaiseAmount));
+                        // update text
+                    }
+                }
+            }
+        });
+
+        decreaseBetButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(localRaiseAmount > 0) {
+                    localRaiseAmount = localRaiseAmount-200;
+                    raiseText.setText(Integer.toString(localRaiseAmount));
+                    // update text
+                }
+            }
+        });
+        Log.d("dbg::", "phase3");
         /* Keep global variables up-to-date */
         DatabaseReference gameVariables = database.getReference("game-1/variables");
         ValueEventListener gameVariablesListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 gVars = dataSnapshot.getValue(GameVariables.class);
-                totalBetText.setText(Integer.toString(gVars.getTotalBet()));
-                currentBetText.setText(Integer.toString(gVars.getRoundBet()));
+                totalBetText.setText("$"+Integer.toString(gVars.getTotalBet()));
+                currentBetText.setText("$"+Integer.toString(gVars.getRoundBet()));
+
+                if(gVars.getPlayerTurn() != userSpot+1) {
+
+                    DatabaseReference gameSpots = database.getReference("game-1/free-spots");
+                    gameSpots.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                if(Integer.parseInt(snapshot.getKey()) != userSpot) {
+                                    if(snapshot.getValue(Boolean.class) == true) {
+                                        hidePlayerAvatar(Integer.parseInt(snapshot.getKey()));
+                                    }
+                                    else {
+                                        showPlayerAvatar(Integer.parseInt(snapshot.getKey()));
+                                    }
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });
+                }
                 if(gVars.getCurrentRound() == -1) {
+                    readyBox.setVisibility(View.VISIBLE);
+                    readyButton.setClickable(true);
                     readyButton.setVisibility(View.VISIBLE);
                     hideAllButtons();
                     user.setCard1(-1);
@@ -186,6 +353,30 @@ public class GamePage extends AppCompatActivity {
                     FirebaseDatabase db = FirebaseDatabase.getInstance();
                     DatabaseReference update = db.getReference("game-1/player-variables/" + Integer.toString(userSpot));
                     update.setValue(user);
+
+                    DatabaseReference gameSpots = database.getReference("game-1/free-spots");
+                    gameSpots.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                if(Integer.parseInt(snapshot.getKey()) != userSpot) {
+                                    if(snapshot.getValue(Boolean.class) == true) {
+                                        hidePlayerAvatar(Integer.parseInt(snapshot.getKey()));
+                                    }
+                                    else {
+                                        showPlayerAvatar(Integer.parseInt(snapshot.getKey()));
+                                    }
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });
+                    int resID = getResources().getIdentifier(user.getAvatar()+ "_yourturn", "drawable", "com.example.lepti.pokerapp");
+                    userAvatar.setBackgroundResource(resID);
 
 
                     if(!gVars.getHasSomeonePlayed()) {
@@ -213,9 +404,42 @@ public class GamePage extends AppCompatActivity {
 
                     }
                 }
+                else if(gVars.getHasSomeonePlayed() == false && gVars.getCurrentRound() == 0 && gVars.getPlayerTurn() > 0) {
+                    hideAllButtons();
+                    if(playerAvatarLayout[0].getVisibility() == View.VISIBLE) {
+                        Animation fade_in = AnimationUtils.loadAnimation(GamePage.this, R.anim.fade_in);
+                        p2Card1.setVisibility(View.VISIBLE);
+                        p2Card1.setAnimation(fade_in);
+                        p2Card2.setVisibility(View.VISIBLE);
+                        p2Card2.setAnimation(fade_in);
+                    }
+
+                    if(playerAvatarLayout[1].getVisibility() == View.VISIBLE) {
+                        Animation fade_in = AnimationUtils.loadAnimation(GamePage.this, R.anim.fade_in);
+                        p3Card1.setVisibility(View.VISIBLE);
+                        p3Card1.setAnimation(fade_in);
+                        p3Card2.setVisibility(View.VISIBLE);
+                        p3Card2.setAnimation(fade_in);
+                    }
+
+                    if(playerAvatarLayout[2].getVisibility() == View.VISIBLE) {
+                        Animation fade_in = AnimationUtils.loadAnimation(GamePage.this, R.anim.fade_in);
+                        p4Card1.setVisibility(View.VISIBLE);
+                        p4Card1.setAnimation(fade_in);
+                        p4Card2.setVisibility(View.VISIBLE);
+                        p4Card2.setAnimation(fade_in);
+                    }
+                    readyTextId.setText("Click when ready");
+                    readyBox.setVisibility(View.INVISIBLE);
+                    totalBetText.setText("$0");
+                    currentBetText.setText("$0");
+                    totalBetBox.setVisibility(View.VISIBLE);
+                    currentBetBox.setVisibility(View.VISIBLE);
+                }
                 else {
                     hideAllButtons();
                 }
+
             }
 
             @Override
@@ -233,14 +457,136 @@ public class GamePage extends AppCompatActivity {
                 tCards = dataSnapshot.getValue(TableCards.class);
                 if(tCards.getState() == 1) {
                     // state 1 update 3 cards
-                    int resID = getResources().getIdentifier(returnCardName(tCards.getTableCard1()), "drawable", "com.example.lepti.pokerapp");
-                    tableCard1View.setImageResource(resID);
 
-                    resID = getResources().getIdentifier(returnCardName(tCards.getTableCard2()), "drawable", "com.example.lepti.pokerapp");
-                    tableCard2View.setImageResource(resID);
+                    final Animation fromtop = AnimationUtils.loadAnimation(GamePage.this, R.anim.fromtop);
+                    final Animation fromtop2 = AnimationUtils.loadAnimation(GamePage.this, R.anim.fromtop);
+                    final Animation fromtop3 = AnimationUtils.loadAnimation(GamePage.this, R.anim.fromtop);
+                    tableCard1View.setVisibility(View.VISIBLE);
+                    tableCard1View.setAnimation(fromtop);
 
-                    resID = getResources().getIdentifier(returnCardName(tCards.getTableCard3()), "drawable", "com.example.lepti.pokerapp");
-                    tableCard3View.setImageResource(resID);
+                    final AnimatorSet set = new AnimatorSet();
+                    Animator animator1 = AnimatorInflater.loadAnimator(GamePage.this,
+                            R.animator.flip_out);
+                    Animator animator2 = AnimatorInflater.loadAnimator(GamePage.this,
+                            R.animator.flip_in);
+
+                    final AnimatorSet set2 = new AnimatorSet();
+                    Animator animator12 = AnimatorInflater.loadAnimator(GamePage.this,
+                            R.animator.flip_out);
+                    Animator animator22 = AnimatorInflater.loadAnimator(GamePage.this,
+                            R.animator.flip_in);
+
+                    set2.playSequentially(animator12, animator22);
+                    set2.setTarget(tableCard2View);
+                    set.playSequentially(animator1, animator2);
+                    set.setTarget(tableCard1View);
+
+                    fromtop.setAnimationListener(new Animation.AnimationListener() {
+                        @Override
+                        public void onAnimationStart(Animation animation) {
+
+                        }
+
+                        @Override
+                        public void onAnimationEnd(Animation animation) {
+                            tableCard2View.setVisibility(View.VISIBLE);
+                            tableCard2View.setAnimation(fromtop2);
+                        }
+
+                        @Override
+                        public void onAnimationRepeat(Animation animation) {
+
+                        }
+                    });
+
+                    fromtop2.setAnimationListener(new Animation.AnimationListener() {
+                        @Override
+                        public void onAnimationStart(Animation animation) {
+
+                        }
+
+                        @Override
+                        public void onAnimationEnd(Animation animation) {
+                            tableCard3View.setVisibility(View.VISIBLE);
+                            tableCard3View.setAnimation(fromtop3);
+                        }
+
+                        @Override
+                        public void onAnimationRepeat(Animation animation) {
+
+                        }
+                    });
+
+                    fromtop3.setAnimationListener(new Animation.AnimationListener() {
+                        @Override
+                        public void onAnimationStart(Animation animation) {
+
+                        }
+
+                        @Override
+                        public void onAnimationEnd(Animation animation) {
+                            set.start();
+                        }
+
+                        @Override
+                        public void onAnimationRepeat(Animation animation) {
+
+                        }
+                    });
+
+
+                    animator1.addListener(new Animator.AnimatorListener() {
+                        @Override
+                        public void onAnimationStart(Animator animation) {
+                        }
+
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            //userCard1View.setImageDrawable(getDrawable(returnCardName(user.getCard1())));
+                            tableCard1View.setVisibility(View.VISIBLE);
+                            int resID = getResources().getIdentifier(returnCardName(tCards.getTableCard1()), "drawable", "com.example.lepti.pokerapp");
+                            tableCard1View.setImageResource(resID);
+
+                            set2.start();
+                        }
+
+                        @Override
+                        public void onAnimationCancel(Animator animation) {
+
+                        }
+
+                        @Override
+                        public void onAnimationRepeat(Animator animation) {
+
+                        }
+                    });
+
+                    animator12.addListener(new Animator.AnimatorListener() {
+                        @Override
+                        public void onAnimationStart(Animator animation) {
+
+                        }
+
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            tableCard2View.setVisibility(View.VISIBLE);
+                            int resID = getResources().getIdentifier(returnCardName(tCards.getTableCard2()), "drawable", "com.example.lepti.pokerapp");
+                            tableCard2View.setImageResource(resID);
+                            revealCard(tableCard3View, returnCardName(tCards.getTableCard3()));
+                        }
+
+                        @Override
+                        public void onAnimationCancel(Animator animation) {
+
+                        }
+
+                        @Override
+                        public void onAnimationRepeat(Animator animation) {
+
+                        }
+                    });
+
+
                 }
                 else if(tCards.getState() == 2) {
                     // state 2 update 1 card
@@ -372,16 +718,22 @@ public class GamePage extends AppCompatActivity {
                 gVars.setReadyPlayers(gVars.getReadyPlayers()+1);
                 gVars.setPlayersCompeting(gVars.getPlayersCompeting() + (int)(Math.pow(2, userSpot)));
                 gVars.setCurrentRound(0);
-                readyButton.setVisibility(View.GONE);
+
+                readyButton.setVisibility(View.INVISIBLE);
+                tableCardsLayout.setVisibility(View.VISIBLE);
+                tableCard1View.setVisibility(View.INVISIBLE);
+                tableCard2View.setVisibility(View.INVISIBLE);
+                tableCard3View.setVisibility(View.INVISIBLE);
                 if(gVars.getReadyPlayers() == gVars.getNumberPlayers() && gVars.getNumberPlayers() > 1) {
-                    //gVars.setPlayerTurn((int)((Math.log( gVars.getPlayersCompeting() & -gVars.getPlayersCompeting() ))/Math.log(2)) + 1); // The current player
-                    //gVars.setCurrentlyCompeting( gVars.getPlayersCompeting() - (int)(Math.pow(2, (int)((Math.log( gVars.getPlayersCompeting() & -gVars.getPlayersCompeting() ))/Math.log(2)))));
                     setupPlayerTurns();
                     gVars.setPlayerTurn(getNextInLine()+1);//);
                     gVars.setRoundBeginnerId(gVars.getPlayerTurn()-1);
                     gVars.setHasSomeonePlayed(false);
                     DatabaseReference ref = database.getReference("game-1/players-queue");
                     ref.setValue(nextPlayerInLine);
+                }
+                else {
+                    readyTextId.setText("Waiting ...");
                 }
                 DatabaseReference globalVariablesRef = database.getReference("game-1/variables");
                 globalVariablesRef.setValue(gVars);
@@ -429,9 +781,9 @@ public class GamePage extends AppCompatActivity {
                     hideAllButtons();
                     switchPlayer();
 
-                    totalBetText.setText(Integer.toString(gVars.getTotalBet()));
-                    currentBetText.setText(Integer.toString(gVars.getRoundBet()));
-                    userMoneyText.setText(Integer.toString(user.getMoney()));
+                    totalBetText.setText("$"+Integer.toString(gVars.getTotalBet()));
+                    currentBetText.setText("$"+Integer.toString(gVars.getRoundBet()));
+                    userMoneyText.setText("$"+Integer.toString(user.getMoney()));
 
                     DatabaseReference ref = database.getReference("game-1/player-variables/"+Integer.toString(userSpot));
                     ref.setValue(user);
@@ -446,11 +798,7 @@ public class GamePage extends AppCompatActivity {
         raiseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!isNumeric(raiseEditText.getText().toString())) {
-                    Toast.makeText(GamePage.this, "It's not a valid number !", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                Integer raiseAmount = Integer.parseInt(raiseEditText.getText().toString());
+                Integer raiseAmount = localRaiseAmount;
                 if(raiseAmount < gVars.getRoundBet()) {
                     Toast.makeText(GamePage.this, "The minimum raise is $"+Integer.toString(gVars.getRoundBet()), Toast.LENGTH_SHORT).show();
                     return;
@@ -476,9 +824,9 @@ public class GamePage extends AppCompatActivity {
                     gVars.setTotalBet(gVars.getTotalBet()+gVars.getRoundBet());
                     hideAllButtons();
                 }
-                totalBetText.setText(Integer.toString(gVars.getTotalBet()));
-                currentBetText.setText(Integer.toString(gVars.getRoundBet()));
-                userMoneyText.setText(Integer.toString(user.getMoney()));
+                totalBetText.setText("$"+Integer.toString(gVars.getTotalBet()));
+                currentBetText.setText("$"+Integer.toString(gVars.getRoundBet()));
+                userMoneyText.setText("$"+Integer.toString(user.getMoney()));
 
                 DatabaseReference ref = database.getReference("game-1/player-variables/"+Integer.toString(userSpot));
                 ref.setValue(user);
@@ -489,6 +837,26 @@ public class GamePage extends AppCompatActivity {
 
             }
         });
+    }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mp.stop();
+        mp.release();
+
+    }
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+            getWindow().getDecorView().setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_FULLSCREEN
+                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+        }
     }
 
     private int getNextInLine() {
@@ -514,20 +882,124 @@ public class GamePage extends AppCompatActivity {
     }
 
     private boolean isPlayerCompeting(int id) {
-        int n = gVars.getPlayersCompeting();
-        for(int i =0; i < (3-id); i++) {
-            n = n >> 1;
-        }
-
-        if ((n & 1) == 0) {
-            Log.d("COMPET:", "id " + Integer.toString(id) + " not competing");
+        if (isKthBitSet(gVars.getPlayersCompeting(), id+1)) {
+            Log.d("COMPET:", "id " + Integer.toString(id) + " competing");
             return true;
         }
         else {
-            Log.d("COMPET:", "id " + Integer.toString(id) + " competing");
+            Log.d("COMPET:", "id " + Integer.toString(id) + " not competing");
             return false;
         }
     }
+
+    private boolean isKthBitSet(int n,
+                                int k)
+    {
+        if ((n & (1 << (k - 1))) >= 1)
+            return true;
+        else
+            return false;
+    }
+
+    private void revealCardsPlayer() {
+
+        userCard1View.setVisibility(View.VISIBLE);
+        userCard2View.setVisibility(View.VISIBLE);
+
+        Animation fade_in1 = AnimationUtils.loadAnimation(GamePage.this, R.anim.fade_in);
+        Animation fade_in2 = AnimationUtils.loadAnimation(GamePage.this, R.anim.fade_in);
+
+        final AnimatorSet set = new AnimatorSet();
+        Animator animator1 = AnimatorInflater.loadAnimator(GamePage.this,
+                R.animator.flip_out);
+        Animator animator2 = AnimatorInflater.loadAnimator(GamePage.this,
+                R.animator.flip_in);
+
+        animator1.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                userCard1View.setImageDrawable(getDrawable(returnCardName(user.getCard1())));
+                revealCard(userCard2View, returnCardName(user.getCard2()));
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+
+            }
+        });
+
+
+        set.playSequentially(animator1, animator2);
+        set.setTarget(userCard1View);
+
+        userCard1View.setAnimation(fade_in1);
+        userCard2View.setAnimation(fade_in2);
+        fade_in1.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                set.start();
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+    }
+    private void revealCard(final ImageView imageid, final String cardName) {
+        AnimatorSet set = new AnimatorSet();
+        Animator animator1 = AnimatorInflater.loadAnimator(GamePage.this,
+                R.animator.flip_out);
+        Animator animator2 = AnimatorInflater.loadAnimator(GamePage.this,
+                R.animator.flip_in);
+
+        animator1.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                imageid.setImageDrawable(getDrawable(cardName));
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+
+            }
+        });
+
+        set.playSequentially(animator1, animator2);
+        set.setTarget(imageid);
+        set.start();
+    }
+
+    private Drawable getDrawable(String s) {
+        String s2 = "drawable/" + s;
+        int imageResource = getResources().getIdentifier(s2, null,
+                getPackageName());
+        return getResources().getDrawable(imageResource);
+    }
+
     private boolean isNumeric(String s) {
         return s != null && s.matches("[-+]?\\d*\\.?\\d+");
     }
@@ -564,25 +1036,35 @@ public class GamePage extends AppCompatActivity {
 
     private void displayCheckButton() {
         if(gVars.getRoundBet() > 0 && user.getMoney() > 0) {
-            checkButton.setText("Call");
+            int resID = getResources().getIdentifier("call_button", "drawable", "com.example.lepti.pokerapp");
+            checkButton.setImageResource(resID);
         }
         else
         {
-            checkButton.setText("Check");
+            int resID = getResources().getIdentifier("check_button", "drawable", "com.example.lepti.pokerapp");
+            checkButton.setImageResource(resID);
         }
         checkButton.setVisibility(View.VISIBLE);
+        checkButton.setClickable(true);
     }
 
     private void displayRaiseButton() {
         if(user.getMoney() > 0) {
             raiseButton.setVisibility(View.VISIBLE);
-            raiseEditText.setVisibility(View.VISIBLE);
+            raiseButton.setClickable(true);
+            raiseText.setVisibility(View.VISIBLE);
+            increaseBetButton.setVisibility(View.VISIBLE);
+            decreaseBetButton.setVisibility(View.VISIBLE);
+            increaseBetButton.setClickable(true);
+            decreaseBetButton.setClickable(true);
+            raiseLayout.setVisibility(View.VISIBLE);
         }
     }
 
     private void displayFoldButton() {
         if(gVars.getRoundBet() > 0 && user.getMoney() > 0) {
             foldButton.setVisibility(View.VISIBLE);
+            foldButton.setClickable(true);
         }
     }
 
@@ -594,10 +1076,18 @@ public class GamePage extends AppCompatActivity {
     }
 
     private void hideAllButtons() {
-        raiseButton.setVisibility(View.GONE);
-        raiseEditText.setVisibility(View.GONE);
-        foldButton.setVisibility(View.GONE);
-        checkButton.setVisibility(View.GONE);
+        raiseButton.setVisibility(View.INVISIBLE);
+        raiseText.setVisibility(View.INVISIBLE);
+        foldButton.setVisibility(View.INVISIBLE);
+        checkButton.setVisibility(View.INVISIBLE);
+        increaseBetButton.setVisibility(View.INVISIBLE);
+        decreaseBetButton.setVisibility(View.INVISIBLE);
+        increaseBetButton.setClickable(false);
+        decreaseBetButton.setClickable(false);
+        raiseLayout.setVisibility(View.INVISIBLE);
+        raiseButton.setClickable(false);
+        foldButton.setClickable(false);
+        raiseButton.setClickable(false);
         return;
     }
     private void updateHands() {
@@ -677,6 +1167,10 @@ public class GamePage extends AppCompatActivity {
         nextPlayerInLine.clear();
         updateGlobal.removeValue();
 
+        userCard1View.setImageDrawable(getDrawable("backside_old"));
+        userCard2View.setImageDrawable(getDrawable("backside_old"));
+        userCard1View.setVisibility(View.INVISIBLE);
+        userCard2View.setVisibility(View.INVISIBLE);
 
         gVars.setCurrentRound(-1);
         gVars.setReadyPlayers(0);
@@ -684,18 +1178,51 @@ public class GamePage extends AppCompatActivity {
         gVars.setPlayersCompeting(0);
         gVars.setPlayerTurn(0);
 
+        localRaiseAmount = 0;
+        raiseText.setText("0");
         updateGlobal = database.getReference("game-1/variables/");
         updateGlobal.setValue(gVars);
     }
 
     private void increaseUserMoney(int money) {
         user.setMoney(user.getMoney()+money);
-        userMoneyText.setText(Integer.toString(user.getMoney()));
+        userMoneyText.setText("$"+Integer.toString(user.getMoney()));
         return;
     }
     private void triggerRoundStartEvent(int currentRound) {
 
         if(currentRound == 0 && (user.getCard1() == -1 || user.getCard2() == -1)) {
+
+            readyTextId.setText("Click when ready");
+            readyBox.setVisibility(View.INVISIBLE);
+            totalBetText.setText("$0");
+            currentBetText.setText("$0");
+            totalBetBox.setVisibility(View.VISIBLE);
+            currentBetBox.setVisibility(View.VISIBLE);
+
+            if(playerAvatarLayout[0].getVisibility() == View.VISIBLE) {
+                Animation fade_in = AnimationUtils.loadAnimation(GamePage.this, R.anim.fade_in);
+                p2Card1.setVisibility(View.VISIBLE);
+                p2Card1.setAnimation(fade_in);
+                p2Card2.setVisibility(View.VISIBLE);
+                p2Card2.setAnimation(fade_in);
+            }
+
+            if(playerAvatarLayout[1].getVisibility() == View.VISIBLE) {
+                Animation fade_in = AnimationUtils.loadAnimation(GamePage.this, R.anim.fade_in);
+                p3Card1.setVisibility(View.VISIBLE);
+                p3Card1.setAnimation(fade_in);
+                p3Card2.setVisibility(View.VISIBLE);
+                p3Card2.setAnimation(fade_in);
+            }
+
+            if(playerAvatarLayout[2].getVisibility() == View.VISIBLE) {
+                Animation fade_in = AnimationUtils.loadAnimation(GamePage.this, R.anim.fade_in);
+                p4Card1.setVisibility(View.VISIBLE);
+                p4Card1.setAnimation(fade_in);
+                p4Card2.setVisibility(View.VISIBLE);
+                p4Card2.setAnimation(fade_in);
+            }
             generateCardsForPlayer();
             displayAllButtons();
         }
@@ -754,12 +1281,15 @@ public class GamePage extends AppCompatActivity {
 
     private void switchPlayer() {
         /* Hide the buttons */
-        checkButton.setVisibility(View.GONE);
-        foldButton.setVisibility(View.GONE);
-        raiseButton.setVisibility(View.GONE);
+        hideAllButtons();
+
 
         /* Database variables */
         FirebaseDatabase database = FirebaseDatabase.getInstance();
+
+
+        int resID = getResources().getIdentifier(user.getAvatar()+ "_notfolded", "drawable", "com.example.lepti.pokerapp");
+        userAvatar.setBackgroundResource(resID);
 
         /* The round at the beginning of the round was the one this user currently has */
         if(gVars.getRoundBeginnerId() == userSpot) {
@@ -787,7 +1317,7 @@ public class GamePage extends AppCompatActivity {
         updateGlobal.setValue(gVars);
     }
 
-    private void showPlayerAvatar(int playerId) {
+    private void showPlayerAvatar(final int playerId) {
         final int layoutId = (playerId+(4-userSpot))%4;
         Log.d("IDD:", "Spot "+ Integer.toString(userSpot)+ " playerId=" +Integer.toString(playerId) + " layoutId=" + Integer.toString(layoutId) );
         FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -800,8 +1330,11 @@ public class GamePage extends AppCompatActivity {
                 /* Change the layout with the user's information*/
                 pMoneyText[layoutId-1].setText(Integer.toString(layoutPlayerVariables.getMoney()));
                 pNicknameText[layoutId-1].setText(layoutPlayerVariables.getNickname());
-                int resID = getResources().getIdentifier(layoutPlayerVariables.getAvatar(), "drawable", "com.example.lepti.pokerapp");
-                pAvatar[layoutId-1].setImageResource(resID);
+                int resID = getResources().getIdentifier(layoutPlayerVariables.getAvatar()+"_notfolded", "drawable", "com.example.lepti.pokerapp");
+                if(gVars.getPlayerTurn() == playerId+1) {
+                    resID = getResources().getIdentifier(layoutPlayerVariables.getAvatar()+"_yourturn", "drawable", "com.example.lepti.pokerapp");
+                }
+                pAvatar[layoutId-1].setBackgroundResource(resID);
 
                 /* Show the avatar */
                 playerAvatarLayout[layoutId-1].setVisibility(View.VISIBLE);
@@ -895,10 +1428,11 @@ public class GamePage extends AppCompatActivity {
         cardsRef = database.getReference("game-1/cards");
         cardsRef.setValue(cardsUsed);
 
-        int resID = getResources().getIdentifier(returnCardName(user.getCard1()), "drawable", "com.example.lepti.pokerapp");
-        userCard1View.setImageResource(resID);
-        resID = getResources().getIdentifier(returnCardName(user.getCard2()), "drawable", "com.example.lepti.pokerapp");
-        userCard2View.setImageResource(resID);
+        //int resID = getResources().getIdentifier(returnCardName(user.getCard1()), "drawable", "com.example.lepti.pokerapp");
+        //userCard1View.setImageResource(resID);
+        revealCardsPlayer();
+        //resID = getResources().getIdentifier(returnCardName(user.getCard2()), "drawable", "com.example.lepti.pokerapp");
+        //userCard2View.setImageResource(resID);
     }
 
     private void generateTableCards(int phase) {
@@ -940,7 +1474,7 @@ public class GamePage extends AppCompatActivity {
     }
     private void hidePlayerAvatar(int playerId) {
         int layoutId = (playerId+(4-userSpot))%4;
-        playerAvatarLayout[layoutId-1].setVisibility(View.GONE);
+        playerAvatarLayout[layoutId-1].setVisibility(View.INVISIBLE);
     }
 
     public String getUserHand() {
