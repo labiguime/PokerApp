@@ -10,7 +10,7 @@ public class PlayerVariables {
     int lastRoundPlayed;
     int currentBet;
 
-    public PlayerVariables() {
+   public PlayerVariables() {
         this.nickname = "Nobody";
         this.avatar = "profile_icon";
         bestHandName = "No Pair";
@@ -28,6 +28,7 @@ public class PlayerVariables {
         card2 = -1;
         money = 10000;
         currentBet = 0;
+        lastRoundPlayed = -1;
     }
 
     public int getCurrentBet() {
