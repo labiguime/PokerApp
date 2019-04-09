@@ -1,28 +1,13 @@
 package com.example.lepti.pokerapp;
 
-import android.animation.Animator;
-import android.animation.AnimatorInflater;
-import android.animation.AnimatorSet;
-import android.app.ActionBar;
-import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.graphics.drawable.Drawable;
-import android.media.Image;
-import android.media.MediaPlayer;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.view.animation.LinearInterpolator;
-import android.view.animation.RotateAnimation;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -38,7 +23,6 @@ import java.util.Map;
 
 import classes.GameVariables;
 import classes.PlayerVariables;
-import classes.TableCards;
 
 public class HomePage extends AppCompatActivity {
     ImageView app_logo;
@@ -50,7 +34,6 @@ public class HomePage extends AppCompatActivity {
     ImageView changePictureButton;
     Map<String, Boolean> freeSpots = new HashMap<>();
     GameVariables gVars = new GameVariables();
-    MediaPlayer mp;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,9 +46,8 @@ public class HomePage extends AppCompatActivity {
        // decorView.setSystemUiVisibility(uiOptions);
 
         //
-        mp = MediaPlayer.create(HomePage.this, R.raw.background_music);
-        mp.setLooping(true);
-        mp.start();
+        Intent svc=new Intent(this, BackgroundService.class);
+        startService(svc);
         View decorView = getWindow().getDecorView();
         decorView.setOnSystemUiVisibilityChangeListener
                 (new View.OnSystemUiVisibilityChangeListener() {
@@ -171,32 +153,23 @@ public class HomePage extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        mp.stop();
-        mp.release();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        //mp.stop();
-        //mp.release();
+        Log.d("STOP::", "STopped");
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         join_button.setClickable(true);
-        //if(mp == null) mp = MediaPlayer.create(HomePage.this, R.raw.background_music);
-        //mp.setLooping(true);
-        //mp.start();
-        //mp.start();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        //mp.stop();
-        //mp.release();
     }
 
     private void joinGame(final int gameSpot) {

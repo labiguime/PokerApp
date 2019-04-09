@@ -8,8 +8,12 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
+
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity"></activity>
+
+        <service android:enabled="true" android:name=".BackgroundService" />
+        <activity android:name=".MainActivity">
+        </activity>
         <activity android:name=".HomePage">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -17,7 +21,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".GamePage" />
+        <activity android:name=".GamePage">
+        </activity>
+
     </application>
+
 
 </manifest>

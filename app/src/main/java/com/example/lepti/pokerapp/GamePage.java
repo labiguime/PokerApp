@@ -6,25 +6,23 @@ import android.animation.AnimatorInflater;
 import android.animation.AnimatorSet;
 import android.arch.lifecycle.Lifecycle;
 import android.arch.lifecycle.ProcessLifecycleOwner;
-import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
-import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,8 +32,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,8 +48,6 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.TreeSet;
-
-import static android.widget.Toast.LENGTH_SHORT;
 
 import classes.GameVariables;
 import classes.PlayerVariables;
@@ -140,12 +134,10 @@ public class GamePage extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game_page);
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-
-
         if(alreadyCreated) return;
+        Intent svc=new Intent(this, BackgroundService.class);
+        startService(svc);
         final FirebaseDatabase database = FirebaseDatabase.getInstance();
-
-
         View decorView = getWindow().getDecorView();
         decorView.setOnSystemUiVisibilityChangeListener
                 (new View.OnSystemUiVisibilityChangeListener() {
@@ -321,6 +313,12 @@ public class GamePage extends AppCompatActivity {
                 gVars = dataSnapshot.getValue(GameVariables.class);
                 totalBetText.setText("$"+Integer.toString(gVars.getTotalBet()));
                 currentBetText.setText("$"+Integer.toString(gVars.getRoundBet()));
+                if(gVars.getRoundBet() > user.getCurrentBet()) {
+                    currentBetText.setTextColor(getResources().getColor(R.color.colorAccent));
+                }
+                else {
+                    currentBetText.setTextColor(getResources().getColor(R.color.common_google_signin_btn_text_dark_default));
+                }
                 if(lastRoundRecorded == gVars.getCurrentRound() && lastPlayerTurnRecorded == gVars.getPlayerTurn()) return;
 
                 if(gVars.getPlayerTurn() != userSpot+1 && gVars.getCurrentRound() != -1) {
@@ -351,6 +349,14 @@ public class GamePage extends AppCompatActivity {
 
                         }
                     });
+
+                    if(gVars.getCurrentRound() == 0 && gVars.getPlayerTurn() > 0 && user.getLastRoundPlayed() != 0 ) {
+                        int resId = getResources().getIdentifier("backside_old", "drawable", "com.example.lepti.pokerapp");
+                        userCard1View.setImageResource(resId);
+                        userCard2View.setImageResource(resId);
+                        userCard1View.setVisibility(View.VISIBLE);
+                        userCard2View.setVisibility(View.VISIBLE);
+                    }
                 }
                 if(gVars.getCurrentRound() == -1) {
                     lastRoundRecorded = gVars.getCurrentRound();
@@ -398,7 +404,7 @@ public class GamePage extends AppCompatActivity {
                     raiseText.setText("0");
                     totalBetText.setText("$0");
                     currentBetText.setText("$0");
-
+                    currentBetText.setTextColor(getResources().getColor(R.color.common_google_signin_btn_text_dark_default));
                     int resID = getResources().getIdentifier(user.getAvatar()+ "_notfolded", "drawable", "com.example.lepti.pokerapp");
                     userAvatar.setBackgroundResource(resID);
 
@@ -429,7 +435,9 @@ public class GamePage extends AppCompatActivity {
                 else if(gVars.getPlayerTurn() == userSpot+1) {
                     lastRoundRecorded = gVars.getCurrentRound();
                     lastPlayerTurnRecorded = gVars.getPlayerTurn();
-                    //if((user.getLastRoundPlayed() == gVars.getCurrentRound() && gVars.getCurrentRound() != 0)) return;
+                    if((user.getLastRoundPlayed() != gVars.getCurrentRound())) {
+                        user.setCurrentBet(0);
+                    }
 
                     user.setLastRoundPlayed(gVars.getCurrentRound());
                     FirebaseDatabase db = FirebaseDatabase.getInstance();
@@ -515,8 +523,10 @@ public class GamePage extends AppCompatActivity {
                     }
                     readyTextId.setText("Click when ready");
                     readyBox.setVisibility(View.INVISIBLE);
+                    //raiseText.setText("0");
                     totalBetText.setText("$0");
                     currentBetText.setText("$0");
+                    currentBetText.setTextColor(getResources().getColor(R.color.common_google_signin_btn_text_dark_default));
                     totalBetBox.setVisibility(View.VISIBLE);
                     currentBetBox.setVisibility(View.VISIBLE);
                 }
@@ -880,10 +890,15 @@ public class GamePage extends AppCompatActivity {
                     if(user.getLastRoundPlayed() != 8) {
                         //hideAllButtons();
                         user.setLastRoundPlayed(8);
+
+                        TreeSet<Integer> tree = new TreeSet<Integer>();
+                        for(int i = 0; i < winningPlayers.size(); i++) {
+                            tree.add(winningPlayers.get(i));
+                        }
                         for(int i = 0; i < winningPlayers.size(); i++) {
                             if(winningPlayers.get(i) == userSpot) {
                                 Toast.makeText(GamePage.this, "Congratulations! You won!", Toast.LENGTH_SHORT).show();
-                                increaseUserMoney(Math.floorDiv(gVars.getTotalBet(), winningPlayers.size()));
+                                increaseUserMoney(Math.floorDiv(gVars.getTotalBet(), tree.size()));
                                 break;
                             }
                             if(i == winningPlayers.size()-1) {
@@ -911,8 +926,30 @@ public class GamePage extends AppCompatActivity {
                             Toast.makeText(GamePage.this, "Winner found! End of the round.", Toast.LENGTH_SHORT).show();
                         }
                         else {
+
                             increaseUserMoney(gVars.getTotalBet());
                             Toast.makeText(GamePage.this, "Your opponent folded. You won!", Toast.LENGTH_SHORT).show();
+                            DatabaseReference gameSpots = database.getReference("game-1/free-spots");
+                            gameSpots.addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                        if(Integer.parseInt(snapshot.getKey()) != userSpot) {
+                                            if(snapshot.getValue(Boolean.class) == true) {
+                                                hidePlayerAvatar(Integer.parseInt(snapshot.getKey()));
+                                            }
+                                            else {
+                                                showPlayerAvatar(Integer.parseInt(snapshot.getKey()));
+                                            }
+                                        }
+                                    }
+                                }
+
+                                @Override
+                                public void onCancelled(DatabaseError databaseError) {
+
+                                }
+                            });
                             final Timer timer = new Timer();
                             timer.schedule(new TimerTask() {
                                 @Override
@@ -938,6 +975,19 @@ public class GamePage extends AppCompatActivity {
                     int resId = getResources().getIdentifier("backside_old", "drawable", "com.example.lepti.pokerapp");
                     userCard1View.setImageResource(resId);
                     userCard2View.setImageResource(resId);
+                    tableCard1View.setImageResource(resId);
+                    tableCard2View.setImageResource(resId);
+                    tableCard3View.setImageResource(resId);
+                    tableCard4View.setImageResource(resId);
+                    tableCard5View.setImageResource(resId);
+
+                    p2Card1.setImageResource(resId);
+                    p2Card2.setImageResource(resId);
+                    p3Card1.setImageResource(resId);
+                    p3Card2.setImageResource(resId);
+                    p4Card1.setImageResource(resId);
+                    p4Card2.setImageResource(resId);
+
                     /* Setting up the UI */
                     resId = getResources().getIdentifier(user.getAvatar()+ "_notfolded", "drawable", "com.example.lepti.pokerapp");
                     userAvatar.setBackgroundResource(resId);
@@ -1184,24 +1234,26 @@ public class GamePage extends AppCompatActivity {
             public void onClick(View v) {
                 if(gVars.getRoundBet() == 0) { // It's a check
                     hideAllButtons();
-                    //Toast.makeText(GamePage.this, "You checked!", LENGTH_SHORT).show();
                     switchPlayer();
                 }
                 else // It's a call
                 {
                     int money = user.getMoney();
-                    if(money < gVars.getRoundBet()) {
-                        user.setCurrentBet(user.getCurrentBet()+money);
+                    if((user.getCurrentBet()+money) < gVars.getRoundBet()) {
                         user.setMoney(0);
-                        gVars.setTotalBet(gVars.getTotalBet()+money);
+                        gVars.setTotalBet(gVars.getTotalBet()+gVars.getRoundBet()-(user.getCurrentBet()+money));
+                        user.setCurrentBet(gVars.getRoundBet()-(user.getCurrentBet()+money));
+                        Toast.makeText(GamePage.this, "You went all in.", Toast.LENGTH_SHORT).show();
                     }
                     else {
-                        user.setCurrentBet(user.getCurrentBet()+gVars.getRoundBet());
-                        user.setMoney(money-gVars.getRoundBet());
-                        gVars.setTotalBet(gVars.getTotalBet()+gVars.getRoundBet());
+                        Toast.makeText(GamePage.this, "You've added $"+Integer.toString((gVars.getRoundBet()-user.getCurrentBet()))+" to match the pot.", Toast.LENGTH_SHORT).show();
+                        user.setMoney(money-(gVars.getRoundBet()-user.getCurrentBet()));
+                        gVars.setTotalBet(gVars.getTotalBet()+(gVars.getRoundBet()-user.getCurrentBet()));
+                        user.setCurrentBet(gVars.getRoundBet());
                     }
                     totalBetText.setText("$"+Integer.toString(gVars.getTotalBet()));
                     currentBetText.setText("$"+Integer.toString(gVars.getRoundBet()));
+                    currentBetText.setTextColor(getResources().getColor(R.color.common_google_signin_btn_text_dark_default));
                     userMoneyText.setText("$"+Integer.toString(user.getMoney()));
 
                     DatabaseReference ref = database.getReference("game-1/player-variables/"+Integer.toString(userSpot));
@@ -1230,10 +1282,11 @@ public class GamePage extends AppCompatActivity {
                     return;
                 }
                 if(raiseAmount > gVars.getRoundBet()) {
-                    user.setMoney(user.getMoney() - raiseAmount);
+                    Toast.makeText(GamePage.this, "You've added $"+Integer.toString((raiseAmount-user.getCurrentBet()))+" to the pot.", Toast.LENGTH_SHORT).show();
+                    user.setMoney(user.getMoney() - (raiseAmount-user.getCurrentBet()) );
+                    gVars.setTotalBet(gVars.getTotalBet() + (raiseAmount-user.getCurrentBet()));
                     user.setCurrentBet(raiseAmount);
                     gVars.setRoundBet(raiseAmount);
-                    gVars.setTotalBet(gVars.getTotalBet() + raiseAmount);
                     hideAllButtons();
                     addPlayerTurnsFromUserSpot(userSpot);
                     DatabaseReference ref = database.getReference("game-1/players-queue");
@@ -1241,13 +1294,15 @@ public class GamePage extends AppCompatActivity {
                 }
                 else
                 {
-                    user.setCurrentBet(user.getCurrentBet()+gVars.getRoundBet());
-                    user.setMoney(user.getMoney()-gVars.getRoundBet());
-                    gVars.setTotalBet(gVars.getTotalBet()+gVars.getRoundBet());
+                    Toast.makeText(GamePage.this, "You've added $"+Integer.toString((raiseAmount-user.getCurrentBet()))+" to match the pot.", Toast.LENGTH_SHORT).show();
+                    user.setMoney(user.getMoney() - (raiseAmount-user.getCurrentBet()) );
+                    gVars.setTotalBet(gVars.getTotalBet() + (raiseAmount-user.getCurrentBet()));
+                    user.setCurrentBet(raiseAmount);
                     hideAllButtons();
                 }
                 totalBetText.setText("$"+Integer.toString(gVars.getTotalBet()));
                 currentBetText.setText("$"+Integer.toString(gVars.getRoundBet()));
+                currentBetText.setTextColor(getResources().getColor(R.color.common_google_signin_btn_text_dark_default));
                 userMoneyText.setText("$"+Integer.toString(user.getMoney()));
 
                 DatabaseReference ref = database.getReference("game-1/player-variables/"+Integer.toString(userSpot));
@@ -1961,8 +2016,10 @@ public class GamePage extends AppCompatActivity {
 
             readyTextId.setText("Click when ready");
             readyBox.setVisibility(View.INVISIBLE);
+            raiseText.setText("0");
             totalBetText.setText("$0");
             currentBetText.setText("$0");
+            currentBetText.setTextColor(getResources().getColor(R.color.common_google_signin_btn_text_dark_default));
             totalBetBox.setVisibility(View.VISIBLE);
             currentBetBox.setVisibility(View.VISIBLE);
 
