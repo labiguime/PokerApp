@@ -96,7 +96,6 @@ public class HomePage extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 gVars = dataSnapshot.getValue(GameVariables.class);
-
             }
 
             @Override
@@ -107,7 +106,7 @@ public class HomePage extends AppCompatActivity {
         DatabaseReference cardsRef = database.getReference("game-1/table-cards");
         cardsRef.setValue(new TableCards());
 
-        cardsRef = database.getReference("game-1/free-spots");
+        /*cardsRef = database.getReference("game-1/free-spots");
         freeSpots.put("0", true);
         freeSpots.put("1", true);
         freeSpots.put("2", true);
@@ -116,19 +115,22 @@ public class HomePage extends AppCompatActivity {
         freeSpots.clear();
 
         cardsRef = database.getReference("game-1/variables");
-        cardsRef.setValue(new GameVariables());
+        cardsRef.setValue(new GameVariables());*/
         app_logo.setAnimation(fromtop);
         join_button = findViewById(R.id.joinGameButton);
+        join_button.setClickable(true);
         join_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String nickname = nicknameTextBox.getText().toString();
-
+                join_button.setClickable(false);
                 if(nickname.isEmpty()) {
                     Toast.makeText(getApplicationContext(),"You must choose a nickname!",Toast.LENGTH_SHORT).show();
+                    join_button.setClickable(true);
                 }
                 else if(nickname.length() > 15) {
-                    Toast.makeText(getApplicationContext(),"Your nickname is too long!",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(),"Your nickname is too long (more than 15 char.)!",Toast.LENGTH_SHORT).show();
+                    join_button.setClickable(true);
                 }
                 else {
                     DatabaseReference myRef = database.getReference("game-1/free-spots");
@@ -182,13 +184,36 @@ public class HomePage extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         mp.stop();
-        mp.release();
+    }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mp.stop();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mp.start();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mp.stop();
+        mp.release();
     }
 
     private void joinGame(int gameSpot) {
         if(gameSpot == -1) {
-            // Cannot join the game
+            Toast.makeText(HomePage.this, "The room is full (4/4)...", Toast.LENGTH_SHORT).show();
+            join_button.setClickable(true);
+            return;
+        }
+        if(gVars.getNumberPlayers() == gVars.getReadyPlayers() && gVars.getNumberPlayers() > 1) {
+            Toast.makeText(HomePage.this, "The game has already started, you cannot join the room!", Toast.LENGTH_SHORT).show();
+            join_button.setClickable(true);
             return;
         }
         Intent myIntent = new Intent(HomePage.this, GamePage.class);
