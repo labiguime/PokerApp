@@ -114,6 +114,7 @@ public class GamePage extends AppCompatActivity {
 
     int lastRoundRecorded = -1;
     int lastPlayerTurnRecorded = -1;
+    Map<String, Boolean> freeSpots = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -897,16 +898,21 @@ public class GamePage extends AppCompatActivity {
         gameSpots.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    if(Integer.parseInt(snapshot.getKey()) != userSpot) {
-                        if(snapshot.getValue(Boolean.class) == true) {
-                            hidePlayerAvatar(Integer.parseInt(snapshot.getKey()));
-                        }
-                        else {
-                            showPlayerAvatar(Integer.parseInt(snapshot.getKey()));
+                freeSpots.clear();
+                if(dataSnapshot.exists()) {
+                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                        freeSpots.put(snapshot.getKey(), snapshot.getValue(Boolean.class));
+                        if(Integer.parseInt(snapshot.getKey()) != userSpot) {
+                            if(snapshot.getValue(Boolean.class)) {
+                                hidePlayerAvatar(Integer.parseInt(snapshot.getKey()));
+                            }
+                            else {
+                                showPlayerAvatar(Integer.parseInt(snapshot.getKey()));
+                            }
                         }
                     }
                 }
+
             }
 
             @Override
@@ -1133,6 +1139,58 @@ public class GamePage extends AppCompatActivity {
             }
         });
     }
+
+    @Override
+    public void onBackPressed() {
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+
+        for (Map.Entry<String, Boolean> entry : freeSpots.entrySet()) {
+            if(entry.getKey().equals(Integer.toString(userSpot))) {
+                entry.setValue(true);
+                break;
+            }
+        }
+        gVars.setNumberPlayers(gVars.getNumberPlayers()-1);
+        gVars.setReadyPlayers(gVars.getReadyPlayers()-1);
+
+        DatabaseReference ref = database.getReference("game-1/variables/");
+        ref.setValue(gVars);
+
+        ref = database.getReference("game-1/free-spots/");
+        ref.setValue(freeSpots);
+
+        if(gVars.getNumberPlayers() == 0) {
+
+            ref = database.getReference("game-1/variables");
+            ref.setValue(new GameVariables());
+
+            ref = database.getReference("game-1/table-cards");
+            ref.setValue(new TableCards());
+
+            ref = database.getReference("game-1/winner");
+            ref.removeValue();
+
+            ref = database.getReference("game-1/players-queue");
+            ref.removeValue();
+
+
+        }
+        if(gVars.getNumberPlayers() == 1) {
+            // total phase
+        }
+        else {
+            if(gVars.getPlayerTurn()+1 == userSpot) {
+                // he was playing
+            }
+            else {
+                // he wasnt playing
+            }
+        }
+
+        GamePage.super.onBackPressed();
+    }
+
+
     @Override
     protected void onPause() {
         super.onPause();
