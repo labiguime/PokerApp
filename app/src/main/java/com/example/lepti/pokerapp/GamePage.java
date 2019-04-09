@@ -4,6 +4,8 @@ package com.example.lepti.pokerapp;
 import android.animation.Animator;
 import android.animation.AnimatorInflater;
 import android.animation.AnimatorSet;
+import android.arch.lifecycle.Lifecycle;
+import android.arch.lifecycle.ProcessLifecycleOwner;
 import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.graphics.drawable.Drawable;
@@ -115,6 +117,23 @@ public class GamePage extends AppCompatActivity {
     int lastRoundRecorded = -1;
     int lastPlayerTurnRecorded = -1;
     Map<String, Boolean> freeSpots = new HashMap<>();
+    ValueEventListener gameVariablesListener;
+    DatabaseReference gameVariablesDR;
+
+    DatabaseReference playerVariablesDR;
+    ValueEventListener playerVariablesListener;
+    DatabaseReference tableCardVariablesDR;
+    ValueEventListener tableCardVariablesListener;
+    DatabaseReference gameSpotsDR;
+    ValueEventListener gameSpotsListener;
+    DatabaseReference cardsRefDR;
+    ValueEventListener cardsRefListener;
+    DatabaseReference winnersRefDR;
+    DatabaseReference pQueueRefDR;
+    ValueEventListener pQueueRefListener;
+    ValueEventListener winnersRefListener;
+
+    boolean alreadyCreated = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -122,9 +141,10 @@ public class GamePage extends AppCompatActivity {
         setContentView(R.layout.activity_game_page);
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
+
+        if(alreadyCreated) return;
         final FirebaseDatabase database = FirebaseDatabase.getInstance();
 
-        Log.d("dbg::", "phase0");
 
         View decorView = getWindow().getDecorView();
         decorView.setOnSystemUiVisibilityChangeListener
@@ -143,10 +163,12 @@ public class GamePage extends AppCompatActivity {
                         }
                     }
                 });
-
-        mp = MediaPlayer.create(this, R.raw.background_music);
-        mp.setLooping(true);
-        mp.start();
+        //mp = MediaPlayer.create(GamePage.this, R.raw.background_music);
+        //mp.setLooping(true);
+        //mp.start();
+       // mp = MediaPlayer.create(this, R.raw.background_music);
+        //mp.setLooping(true);
+        //mp.start();
 
         userCard2View = findViewById(R.id.userCard2);
         tableCard1View = findViewById(R.id.tableCard1);
@@ -288,9 +310,12 @@ public class GamePage extends AppCompatActivity {
                 }
             }
         });
+
+
+
         /* Keep global variables up-to-date */
-        DatabaseReference gameVariables = database.getReference("game-1/variables");
-        ValueEventListener gameVariablesListener = new ValueEventListener() {
+        gameVariablesDR = database.getReference("game-1/variables");
+        gameVariablesListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 gVars = dataSnapshot.getValue(GameVariables.class);
@@ -579,11 +604,27 @@ public class GamePage extends AppCompatActivity {
                 Log.w("TAG", "loadPost:onCancelled", databaseError.toException());
             }
         };
-        gameVariables.addValueEventListener(gameVariablesListener);
+        gameVariablesDR.addValueEventListener(gameVariablesListener);
+
+        playerVariablesDR = database.getReference("game-1/player-variables/"+Integer.toString(userSpot));
+        playerVariablesListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                user = dataSnapshot.getValue(PlayerVariables.class);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        };
+        playerVariablesDR.addValueEventListener(playerVariablesListener);
 
         /* Keep track of the cards on the table */
-        DatabaseReference tableCardVariables = database.getReference("game-1/table-cards");
-        tableCardVariables.addValueEventListener(new ValueEventListener() {
+
+        tableCardVariablesDR = database.getReference("game-1/table-cards");
+
+        tableCardVariablesListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 tCards = dataSnapshot.getValue(TableCards.class);
@@ -864,7 +905,8 @@ public class GamePage extends AppCompatActivity {
                 }
                 else if(tCards.getState() == 6) {
                     if(user.getLastRoundPlayed() != 8) {
-                        user.setLastRoundPlayed(8);
+                        hideAllButtons();
+
                         if(user.getHasPlayerFolded()) {
                             Toast.makeText(GamePage.this, "Winner found! End of the round.", Toast.LENGTH_SHORT).show();
                         }
@@ -880,10 +922,80 @@ public class GamePage extends AppCompatActivity {
                                 }
                             }, 4000);
                         }
-                        user.setHasPlayerFolded(false);
+                        user.setLastRoundPlayed(8);
                         DatabaseReference updateGlobal = database.getReference("game-1/player-variables/"+Integer.toString(userSpot));
                         updateGlobal.setValue(user);
                     }
+                }
+                else if(tCards.getState() == 7) {
+                    if(user.getLastRoundPlayed() == 8) return;
+                    user.setMoney(gVars.getTotalBet()+user.getMoney());
+                    user.setLastRoundPlayed(-1);
+                    user.setHasPlayerFolded(false);
+                    user.setCard1(-1);
+                    user.setCard2(-1);
+
+                    int resId = getResources().getIdentifier("backside_old", "drawable", "com.example.lepti.pokerapp");
+                    userCard1View.setImageResource(resId);
+                    userCard2View.setImageResource(resId);
+                    /* Setting up the UI */
+                    resId = getResources().getIdentifier(user.getAvatar()+ "_notfolded", "drawable", "com.example.lepti.pokerapp");
+                    userAvatar.setBackgroundResource(resId);
+                    userNicknameText.setText(user.getNickname());
+                    userMoneyText.setText("$"+Integer.toString(user.getMoney()));
+                    foldButton.setVisibility(View.INVISIBLE);
+                    checkButton.setVisibility(View.INVISIBLE);
+                    readyBox.setVisibility(View.VISIBLE);
+                    readyButton.setVisibility(View.VISIBLE);
+                    raiseButton.setVisibility(View.INVISIBLE);
+                    currentBetBox.setVisibility(View.INVISIBLE);
+                    totalBetBox.setVisibility(View.INVISIBLE);
+
+                    tableCardsLayout.setVisibility(View.INVISIBLE);
+                    foldButton.setClickable(false);
+                    checkButton.setClickable(false);
+                    raiseButton.setClickable(false);
+                    increaseBetButton.setClickable(false);
+                    decreaseBetButton.setClickable(false);
+                    increaseBetButton.setVisibility(View.INVISIBLE);
+                    decreaseBetButton.setVisibility(View.INVISIBLE);
+                    raiseText.setVisibility(View.INVISIBLE);
+                    raiseLayout.setVisibility(View.INVISIBLE);
+                    playerAvatarLayout[0].setVisibility(View.INVISIBLE);
+                    playerAvatarLayout[1].setVisibility(View.INVISIBLE);
+                    playerAvatarLayout[2].setVisibility(View.INVISIBLE);
+
+                    tableCardsLayout.setVisibility(View.INVISIBLE);
+
+                    p2Card1.setVisibility(View.INVISIBLE);
+                    p2Card2.setVisibility(View.INVISIBLE);
+
+                    p3Card1.setVisibility(View.INVISIBLE);
+                    p3Card2.setVisibility(View.INVISIBLE);
+
+                    p4Card1.setVisibility(View.INVISIBLE);
+                    p4Card2.setVisibility(View.INVISIBLE);
+
+                    userCard1View.setVisibility(View.INVISIBLE);
+                    userCard2View.setVisibility(View.INVISIBLE);
+                    hideAllButtons();
+
+                    DatabaseReference ref = database.getReference("game-1/variables");
+                    GameVariables gV = new GameVariables();
+                    gV.setNumberPlayers(1);
+                    ref.setValue(gV);
+
+                    ref = database.getReference("game-1/table-cards");
+                    ref.setValue(new TableCards());
+
+                    ref = database.getReference("game-1/winner");
+                    ref.removeValue();
+
+                    ref = database.getReference("game-1/players-queue");
+                    ref.removeValue();
+
+                    ref = database.getReference("game-1/cards");
+                    ref.removeValue();
                 }
             }
 
@@ -891,11 +1003,14 @@ public class GamePage extends AppCompatActivity {
             public void onCancelled(DatabaseError databaseError) {
                 Log.w("TAG", "loadPost:onCancelled", databaseError.toException());
             }
-        });
+        };
+        tableCardVariablesDR.addValueEventListener(tableCardVariablesListener);
 
         /* Keep track of the players */
-        DatabaseReference gameSpots = database.getReference("game-1/free-spots");
-        gameSpots.addValueEventListener(new ValueEventListener() {
+
+        gameSpotsDR = database.getReference("game-1/free-spots");
+
+        gameSpotsListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 freeSpots.clear();
@@ -919,12 +1034,14 @@ public class GamePage extends AppCompatActivity {
             public void onCancelled(DatabaseError databaseError) {
 
             }
-        });
+        };
+        gameSpotsDR.addValueEventListener(gameSpotsListener);
 
-        DatabaseReference cardsRef = database.getReference("game-1/cards");
 
+        cardsRefDR = database.getReference("game-1/cards");
         /* Keep track of the cards removed from the deck */
-        cardsRef.addValueEventListener(new ValueEventListener() {
+
+        cardsRefListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 cardsUsed.clear();
@@ -936,12 +1053,15 @@ public class GamePage extends AppCompatActivity {
             @Override
             public void onCancelled(DatabaseError databaseError) {
             }
-        });
+        };
+        cardsRefDR.addValueEventListener(cardsRefListener);
 
-        DatabaseReference winnersRef = database.getReference("game-1/winner");
+
+        winnersRefDR = database.getReference("game-1/winner");
 
         /* Keep track of the winning players */
-        winnersRef.addValueEventListener(new ValueEventListener() {
+
+        winnersRefListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 winningPlayers.clear();
@@ -957,11 +1077,14 @@ public class GamePage extends AppCompatActivity {
             @Override
             public void onCancelled(DatabaseError databaseError) {
             }
-        });
+        };
+        winnersRefDR.addValueEventListener(winnersRefListener);
 
-        DatabaseReference pQueueRef = database.getReference("game-1/players-queue");
+
+        pQueueRefDR = database.getReference("game-1/players-queue");
         /* Keep track of the players in queue */
-        pQueueRef.addValueEventListener(new ValueEventListener() {
+
+        pQueueRefListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 nextPlayerInLine.clear();
@@ -977,7 +1100,9 @@ public class GamePage extends AppCompatActivity {
             @Override
             public void onCancelled(DatabaseError databaseError) {
             }
-        });
+        };
+
+        pQueueRefDR.addValueEventListener(pQueueRefListener);
 
         readyButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -985,7 +1110,6 @@ public class GamePage extends AppCompatActivity {
                 gVars.setReadyPlayers(gVars.getReadyPlayers()+1);
                 gVars.setPlayersCompeting(gVars.getPlayersCompeting() + (int)(Math.pow(2, userSpot)));
                 gVars.setCurrentRound(0);
-
                 readyButton.setVisibility(View.INVISIBLE);
                 tableCardsLayout.setVisibility(View.VISIBLE);
                 tableCard1View.setVisibility(View.INVISIBLE);
@@ -1007,7 +1131,6 @@ public class GamePage extends AppCompatActivity {
                 globalVariablesRef.setValue(gVars);
             }
         });
-
         int ressID = getResources().getIdentifier("backside_old", "drawable", "com.example.lepti.pokerapp");
         userCard1View.setImageResource(ressID);
         userCard2View.setImageResource(ressID);
@@ -1040,10 +1163,12 @@ public class GamePage extends AppCompatActivity {
 
                     tCards.setState(6);
 
+                    Toast.makeText(GamePage.this, "You lost!", Toast.LENGTH_SHORT).show();
+
                     updateGlobal = database.getReference("game-1/table-cards/");
                     updateGlobal.setValue(tCards);
 
-                    Toast.makeText(GamePage.this, "You lost!", Toast.LENGTH_SHORT).show();
+
                     // there was only one opponent
                 }
                 else {
@@ -1051,10 +1176,6 @@ public class GamePage extends AppCompatActivity {
                     updateGlobal.setValue(user);
                     switchPlayer();
                 }
-
-
-                //PokerPhase(phase);
-                //phase++;
             }
         });
 
@@ -1079,9 +1200,6 @@ public class GamePage extends AppCompatActivity {
                         user.setMoney(money-gVars.getRoundBet());
                         gVars.setTotalBet(gVars.getTotalBet()+gVars.getRoundBet());
                     }
-                    hideAllButtons();
-                    switchPlayer();
-
                     totalBetText.setText("$"+Integer.toString(gVars.getTotalBet()));
                     currentBetText.setText("$"+Integer.toString(gVars.getRoundBet()));
                     userMoneyText.setText("$"+Integer.toString(user.getMoney()));
@@ -1091,6 +1209,9 @@ public class GamePage extends AppCompatActivity {
 
                     ref = database.getReference("game-1/variables/");
                     ref.setValue(gVars);
+
+                    hideAllButtons();
+                    switchPlayer();
                 }
 
             }
@@ -1138,28 +1259,37 @@ public class GamePage extends AppCompatActivity {
 
             }
         });
+        alreadyCreated = true;
     }
 
     @Override
     public void onBackPressed() {
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
 
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
         for (Map.Entry<String, Boolean> entry : freeSpots.entrySet()) {
             if(entry.getKey().equals(Integer.toString(userSpot))) {
                 entry.setValue(true);
                 break;
             }
         }
+
         gVars.setNumberPlayers(gVars.getNumberPlayers()-1);
         gVars.setReadyPlayers(gVars.getReadyPlayers()-1);
 
-        DatabaseReference ref = database.getReference("game-1/variables/");
-        ref.setValue(gVars);
+        if(gVars.getNumberPlayers() < 0) {
+            gVars.setNumberPlayers(0);
+        }
+        if(gVars.getReadyPlayers() < 0) {
+            gVars.setReadyPlayers(0);
+        }
 
-        ref = database.getReference("game-1/free-spots/");
+        DatabaseReference ref = database.getReference("game-1/free-spots/");
         ref.setValue(freeSpots);
 
-        if(gVars.getNumberPlayers() == 0) {
+        if(gVars.getNumberPlayers() == 0) { // last player in the room left
+
+            ref = database.getReference("game-1/cards");
+            ref.removeValue();
 
             ref = database.getReference("game-1/variables");
             ref.setValue(new GameVariables());
@@ -1173,29 +1303,269 @@ public class GamePage extends AppCompatActivity {
             ref = database.getReference("game-1/players-queue");
             ref.removeValue();
 
+            gameVariablesDR.removeEventListener(gameVariablesListener);
+            playerVariablesDR.removeEventListener(playerVariablesListener);
+            tableCardVariablesDR.removeEventListener(tableCardVariablesListener);
+            gameSpotsDR.removeEventListener(gameSpotsListener);
+            cardsRefDR.removeEventListener(cardsRefListener);
+            winnersRefDR.removeEventListener(winnersRefListener);
+            pQueueRefDR.removeEventListener(pQueueRefListener);
 
         }
-        if(gVars.getNumberPlayers() == 1) {
-            // total phase
+        else if(gVars.getNumberPlayers() == 1) { // they were two so make the last player remaining go through ready button again
+            DatabaseReference updateGlobal = database.getReference("game-1/table-cards/");
+            user.setLastRoundPlayed(8);
+            tCards.setState(7);
+            gameVariablesDR.removeEventListener(gameVariablesListener);
+            playerVariablesDR.removeEventListener(playerVariablesListener);
+            tableCardVariablesDR.removeEventListener(tableCardVariablesListener);
+            gameSpotsDR.removeEventListener(gameSpotsListener);
+            cardsRefDR.removeEventListener(cardsRefListener);
+            winnersRefDR.removeEventListener(winnersRefListener);
+            pQueueRefDR.removeEventListener(pQueueRefListener);
+            updateGlobal.setValue(tCards);
         }
         else {
-            if(gVars.getPlayerTurn()+1 == userSpot) {
-                // he was playing
+            if(gVars.getPlayerTurn() == userSpot+1) { // he was playing
+
+                gVars.setPlayersCompeting(gVars.getPlayersCompeting()-(int)(Math.pow(2, userSpot))); // remove the players competing
+                gVars.setOldPlayersCompeting(gVars.getOldPlayersCompeting()-(int)(Math.pow(2, userSpot)));
+                DatabaseReference updateGlobal = database.getReference("game-1/variables/");
+                Integer spot = userSpot;
+                updateGlobal.setValue(gVars);
+
+                if(nextPlayerInLine.contains(spot)) {
+                    nextPlayerInLine.remove(spot); // remove him from the queue
+                    ref = database.getReference("game-1/players-queue");
+                    ref.setValue(nextPlayerInLine);
+                }
+// if he was in a 1v1 situation
+                gameVariablesDR.removeEventListener(gameVariablesListener);
+                playerVariablesDR.removeEventListener(playerVariablesListener);
+                tableCardVariablesDR.removeEventListener(tableCardVariablesListener);
+                gameSpotsDR.removeEventListener(gameSpotsListener);
+                cardsRefDR.removeEventListener(cardsRefListener);
+                winnersRefDR.removeEventListener(winnersRefListener);
+                pQueueRefDR.removeEventListener(pQueueRefListener);
+
+                int var = 0;
+                for(int i =0; i < 3; i++) {
+                    if(isKthBitSet(gVars.getPlayersCompeting(), i+1)) var++;
+                }
+
+                // if the player was in a 1v1 situation
+                if(var == 1) {
+
+                    user.setLastRoundPlayed(8);
+                    user.setHasPlayerFolded(true);
+                    updateGlobal = database.getReference("game-1/table-cards/");
+                    tCards.setState(6);
+                    updateGlobal.setValue(tCards);
+                    // there was only one opponent
+                }
+                else {
+                    user.setHasPlayerFolded(true);
+                    switchPlayer();
+                }
+
+                // it's not a 1v1 situation
             }
-            else {
-                // he wasnt playing
+            else { // he wasn't the only one playing
+
+                gVars.setPlayersCompeting(gVars.getPlayersCompeting()-(int)(Math.pow(2, userSpot))); // remove the players competing
+                gVars.setOldPlayersCompeting(gVars.getOldPlayersCompeting()-(int)(Math.pow(2, userSpot)));
+                DatabaseReference updateGlobal = database.getReference("game-1/variables/");
+                updateGlobal.setValue(gVars);
+                Integer spot = userSpot;
+                if(nextPlayerInLine.contains(spot)) {
+                    nextPlayerInLine.remove(spot); // remove him from the queue
+                    ref = database.getReference("game-1/players-queue");
+                    ref.setValue(nextPlayerInLine);
+                }
+// if he was in a 1v1 situation
+                gameVariablesDR.removeEventListener(gameVariablesListener);
+                playerVariablesDR.removeEventListener(playerVariablesListener);
+                tableCardVariablesDR.removeEventListener(tableCardVariablesListener);
+                gameSpotsDR.removeEventListener(gameSpotsListener);
+                cardsRefDR.removeEventListener(cardsRefListener);
+                winnersRefDR.removeEventListener(winnersRefListener);
+                pQueueRefDR.removeEventListener(pQueueRefListener);
+                int var = 0;
+                for(int i =0; i < 3; i++) {
+                    if(isKthBitSet(gVars.getPlayersCompeting(), i+1)) var++;
+                }
+
+                // if the player was in a 1v1 situation
+                if(var == 1) {
+
+                    user.setLastRoundPlayed(8);
+                    user.setHasPlayerFolded(true);
+                    updateGlobal = database.getReference("game-1/table-cards/");
+                    tCards.setState(6);
+                    updateGlobal.setValue(tCards);
+                    // there was only one opponent
+                }
+
+            }
+        }
+        GamePage.super.onBackPressed();
+        this.finish();
+    }
+
+    /*
+    @Override
+    public void onStop() {
+        GamePage.super.onStop();
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        for (Map.Entry<String, Boolean> entry : freeSpots.entrySet()) {
+            if(entry.getKey().equals(Integer.toString(userSpot))) {
+                entry.setValue(true);
+                break;
+            }
+        }
+        gVars.setNumberPlayers(gVars.getNumberPlayers()-1);
+        gVars.setReadyPlayers(gVars.getReadyPlayers()-1);
+
+        DatabaseReference ref = database.getReference("game-1/free-spots/");
+        ref.setValue(freeSpots);
+
+        if(gVars.getNumberPlayers() == 0) { // last player in the room left
+
+            ref = database.getReference("game-1/cards");
+            ref.removeValue();
+
+            ref = database.getReference("game-1/variables");
+            ref.setValue(new GameVariables());
+
+            ref = database.getReference("game-1/table-cards");
+            ref.setValue(new TableCards());
+
+            ref = database.getReference("game-1/winner");
+            ref.removeValue();
+
+            ref = database.getReference("game-1/players-queue");
+            ref.removeValue();
+
+            gameVariablesDR.removeEventListener(gameVariablesListener);
+            playerVariablesDR.removeEventListener(playerVariablesListener);
+            tableCardVariablesDR.removeEventListener(tableCardVariablesListener);
+            gameSpotsDR.removeEventListener(gameSpotsListener);
+            cardsRefDR.removeEventListener(cardsRefListener);
+            winnersRefDR.removeEventListener(winnersRefListener);
+            pQueueRefDR.removeEventListener(pQueueRefListener);
+
+
+        }
+        else if(gVars.getNumberPlayers() == 1) { // they were two so make the last player remaining go through ready button again
+            DatabaseReference updateGlobal = database.getReference("game-1/table-cards/");
+            user.setLastRoundPlayed(8);
+            tCards.setState(7);
+            gameVariablesDR.removeEventListener(gameVariablesListener);
+            playerVariablesDR.removeEventListener(playerVariablesListener);
+            tableCardVariablesDR.removeEventListener(tableCardVariablesListener);
+            gameSpotsDR.removeEventListener(gameSpotsListener);
+            cardsRefDR.removeEventListener(cardsRefListener);
+            winnersRefDR.removeEventListener(winnersRefListener);
+            pQueueRefDR.removeEventListener(pQueueRefListener);
+            updateGlobal.setValue(tCards);
+        }
+        else {
+            if(gVars.getPlayerTurn() == userSpot+1) { // he was playing
+
+                gVars.setPlayersCompeting(gVars.getPlayersCompeting()-(int)(Math.pow(2, userSpot))); // remove the players competing
+                gVars.setOldPlayersCompeting(gVars.getOldPlayersCompeting()-(int)(Math.pow(2, userSpot)));
+                DatabaseReference updateGlobal = database.getReference("game-1/variables/");
+                Integer spot = userSpot;
+                updateGlobal.setValue(gVars);
+
+                if(nextPlayerInLine.contains(spot)) {
+                    nextPlayerInLine.remove(spot); // remove him from the queue
+                    ref = database.getReference("game-1/players-queue");
+                    ref.setValue(nextPlayerInLine);
+                }
+// if he was in a 1v1 situation
+                gameVariablesDR.removeEventListener(gameVariablesListener);
+                playerVariablesDR.removeEventListener(playerVariablesListener);
+                tableCardVariablesDR.removeEventListener(tableCardVariablesListener);
+                gameSpotsDR.removeEventListener(gameSpotsListener);
+                cardsRefDR.removeEventListener(cardsRefListener);
+                winnersRefDR.removeEventListener(winnersRefListener);
+                pQueueRefDR.removeEventListener(pQueueRefListener);
+
+                int var = 0;
+                for(int i =0; i < 3; i++) {
+                    if(isKthBitSet(gVars.getPlayersCompeting(), i+1)) var++;
+                }
+
+                // if the player was in a 1v1 situation
+                if(var == 1) {
+
+                    user.setLastRoundPlayed(8);
+                    user.setHasPlayerFolded(true);
+                    updateGlobal = database.getReference("game-1/table-cards/");
+                    tCards.setState(6);
+                    updateGlobal.setValue(tCards);
+                    // there was only one opponent
+                }
+                else {
+                    user.setHasPlayerFolded(true);
+                    switchPlayer();
+                }
+
+                // it's not a 1v1 situation
+            }
+            else { // he wasn't the only one playing
+
+                gVars.setPlayersCompeting(gVars.getPlayersCompeting()-(int)(Math.pow(2, userSpot))); // remove the players competing
+                gVars.setOldPlayersCompeting(gVars.getOldPlayersCompeting()-(int)(Math.pow(2, userSpot)));
+                DatabaseReference updateGlobal = database.getReference("game-1/variables/");
+                updateGlobal.setValue(gVars);
+                Integer spot = userSpot;
+                if(nextPlayerInLine.contains(spot)) {
+                    nextPlayerInLine.remove(spot); // remove him from the queue
+                    ref = database.getReference("game-1/players-queue");
+                    ref.setValue(nextPlayerInLine);
+                }
+// if he was in a 1v1 situation
+                gameVariablesDR.removeEventListener(gameVariablesListener);
+                playerVariablesDR.removeEventListener(playerVariablesListener);
+                tableCardVariablesDR.removeEventListener(tableCardVariablesListener);
+                gameSpotsDR.removeEventListener(gameSpotsListener);
+                cardsRefDR.removeEventListener(cardsRefListener);
+                winnersRefDR.removeEventListener(winnersRefListener);
+                pQueueRefDR.removeEventListener(pQueueRefListener);
+                int var = 0;
+                for(int i =0; i < 3; i++) {
+                    if(isKthBitSet(gVars.getPlayersCompeting(), i+1)) var++;
+                }
+
+                // if the player was in a 1v1 situation
+                if(var == 1) {
+
+                    user.setLastRoundPlayed(8);
+                    user.setHasPlayerFolded(true);
+                    updateGlobal = database.getReference("game-1/table-cards/");
+                    tCards.setState(6);
+                    updateGlobal.setValue(tCards);
+                    // there was only one opponent
+                }
+
             }
         }
 
-        GamePage.super.onBackPressed();
+        this.finish();
     }
 
-
+*/
     @Override
     protected void onPause() {
         super.onPause();
-        mp.stop();
-        mp.release();
+        if(ProcessLifecycleOwner.get().getLifecycle().getCurrentState() == Lifecycle.State.CREATED) {
+            Log.d("PAUSE::", "On pause");
+        }
+
+        //mp.stop();
+       // mp.release();
 
     }
     @Override
@@ -1524,7 +1894,6 @@ public class GamePage extends AppCompatActivity {
     }
 
     private void resetGame() {
-
 
         /* reset the winner field */
         FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -1984,6 +2353,10 @@ public class GamePage extends AppCompatActivity {
 
         /* We iterate through the set */
         int index = 0;
+        if(reverseCards.contains(0)) {
+            userBestHand[index] = 0;
+            index++;
+        }
         while (iteratorReverse.hasNext() && index < 5) {
             int card = iteratorReverse.next();
             userBestHand[index] = card;
@@ -2116,19 +2489,163 @@ public class GamePage extends AppCompatActivity {
             sortedMap.put(entry.getKey(), entry.getValue());
         }
 
-        int entryId = 0;
+        int[] allPairsCheck = new int[13];
+
+        for(int i = 0; i < 7; i++) {
+            int rank = 0;
+            if((userDeckOfCards[i]%13) == 0) rank = 12;
+            else {
+                rank = ((userDeckOfCards[i]-1)%13);
+            }
+            allPairsCheck[rank%13] += 1;
+        }
+
+        int max3 = -1;
+        int max4 = -1;
+        int max22 = -1;
+        int max2 = -1;
+
+        for(int i = 0; i < 13; i++) {
+            if(allPairsCheck[i] == 4) {
+                max4 = i;
+            }
+            else if(allPairsCheck[i] == 3 && max3 < i) {
+                max3 = i;
+            }
+            else if(allPairsCheck[i] == 2 && max2 < i) {
+                max2 = i;
+            }
+        }
+
+        for(int i = 0; i<13; i++) {
+            if(allPairsCheck[i] == 2 && max22 < i && i != max2) {
+                max22 = i;
+            }
+        }
+
+        if(max4 != -1) {
+            results = "Four of a Kind";
+            Integer number = (max4+1)%13;
+            allCards.remove(number);
+
+            Set<Integer> reverseAllCards = ((TreeSet<Integer>) allCards).descendingSet();
+            Iterator<Integer> iterator;
+            iterator = reverseAllCards.iterator();
+
+            while (iterator.hasNext()) {
+                int card = iterator.next();
+                userBestHand[0] = number;
+                userBestHand[1] = number;
+                userBestHand[2] = number;
+                userBestHand[3] = number;
+                if(reverseAllCards.contains(0)) userBestHand[4] = 0;
+                else userBestHand[4] = card;
+                break;
+            }
+        }
+        else if(max3 != -1 && max2 != -1) {
+            results = "Full House";
+            Integer number = (max3+1)%13;
+            allCards.remove(number);
+            userBestHand[0] = number;
+            userBestHand[1] = number;
+            userBestHand[2] = number;
+            number = (max2+1)%13;
+            allCards.remove(number);
+            userBestHand[3] = number;
+            userBestHand[4] = number;
+        }
+        else if(max3 != -1) {
+
+            results = "Three of a Kind";
+            Integer number = (max3+1)%13;
+            allCards.remove(number);
+            Set<Integer> reverseAllCards = ((TreeSet<Integer>) allCards).descendingSet();
+            Iterator<Integer> iterator;
+            iterator = reverseAllCards.iterator();
+
+
+            userBestHand[0] = number;
+            userBestHand[1] = number;
+            userBestHand[2] = number;
+
+
+            int i = 3;
+            if(reverseAllCards.contains(0)) {
+                userBestHand[3] = 0;
+                i++;
+            }
+            while (iterator.hasNext() && i < 5) {
+                int card = iterator.next();
+                userBestHand[i] = card;
+                i++;
+            }
+        }
+        else if(max2 != -1 && max22 != -1) {
+            results = "Two Pairs";
+            Integer number = (max2+1)%13;
+            allCards.remove(number);
+            userBestHand[0] = number;
+            userBestHand[1] = number;
+
+            number = (max22+1)%13;
+            allCards.remove(number);
+            userBestHand[2] = number;
+            userBestHand[3] = number;
+
+
+            Set<Integer> reverseAllCards = ((TreeSet<Integer>) allCards).descendingSet();
+            Iterator<Integer> iterator;
+            iterator = reverseAllCards.iterator();
+
+            if(reverseAllCards.contains(0)) userBestHand[4] = 0;
+            else {
+
+                while (iterator.hasNext()) {
+                    int card = iterator.next();
+                    userBestHand[4] = card;
+                    break;
+                }
+            }
+        }
+        else if(max2 != -1) {
+            results = "One Pair";
+
+            Set<Integer> reverseAllCards = ((TreeSet<Integer>) allCards).descendingSet();
+            Iterator<Integer> iterator;
+            iterator = reverseAllCards.iterator();
+            Integer number = (max2+1)%13;
+
+            userBestHand[0] = number;
+            userBestHand[1] = number;
+
+            int i = 2;
+
+            if(reverseAllCards.contains(0)) {
+                userBestHand[2] = 0;
+                i++;
+            }
+            while (iterator.hasNext() && i < 5) {
+                int card = iterator.next();
+                userBestHand[i] = card;
+                i++;
+            }
+        }
+        else {
+            results = "No Pair";
+        }
+
+        /*int entryId = 0;
         for (Map.Entry<Integer, Integer> entry : sortedMap.entrySet()) {
             entryId++;
             if(entry.getValue() == 4) {
                 results = "Four of a Kind";
                 allCards.remove(entry.getKey());
 
-                /* We create a reverse set */
                 Set<Integer> reverseAllCards = ((TreeSet<Integer>) allCards).descendingSet();
                 Iterator<Integer> iterator;
                 iterator = reverseAllCards.iterator();
 
-                /* We iterate through the set */
                 while (iterator.hasNext()) {
                     int card = iterator.next();
                     userBestHand[0] = entry.getKey();
@@ -2164,12 +2681,10 @@ public class GamePage extends AppCompatActivity {
                 userBestHand[2] = entry.getKey();
                 userBestHand[3] = entry.getKey();
 
-                /* We create a reverse set */
                 Set<Integer> reverseAllCards = ((TreeSet<Integer>) allCards).descendingSet();
                 Iterator<Integer> iterator;
                 iterator = reverseAllCards.iterator();
 
-                /* We iterate through the set */
                 while (iterator.hasNext()) {
                     int card = iterator.next();
                     userBestHand[4] = card;
@@ -2186,18 +2701,17 @@ public class GamePage extends AppCompatActivity {
         }
 
         if(results.equals("Three of a Kind")) {
-            /* We create a reverse set */
+
             allCards.remove(firstRemoved);
             Set<Integer> reverseAllCards = ((TreeSet<Integer>) allCards).descendingSet();
             Iterator<Integer> iterator;
             iterator = reverseAllCards.iterator();
 
-            /* We assign the first three cards */
+
             userBestHand[0] = firstRemoved;
             userBestHand[1] = firstRemoved;
             userBestHand[2] = firstRemoved;
 
-            /* We iterate through the set */
             int i = 3;
             if(reverseAllCards.contains(0)) {
                 userBestHand[3] = 0;
@@ -2210,16 +2724,16 @@ public class GamePage extends AppCompatActivity {
             }
         }
         else if(results.equals("One Pair")) {
-            /* We create a reverse set */
+
             Set<Integer> reverseAllCards = ((TreeSet<Integer>) allCards).descendingSet();
             Iterator<Integer> iterator;
             iterator = reverseAllCards.iterator();
 
-            /* We assign the first three cards */
+
             userBestHand[0] = firstRemoved;
             userBestHand[1] = firstRemoved;
 
-            /* We iterate through the set */
+
             int i = 2;
             while (iterator.hasNext() && i < 5) {
                 int card = iterator.next();
@@ -2227,7 +2741,7 @@ public class GamePage extends AppCompatActivity {
                 i++;
             }
         }
-
+*/
 
 
         if(highestStraightFlush == 0) {
@@ -2283,6 +2797,10 @@ public class GamePage extends AppCompatActivity {
                 userBestHand[4] = (highestStraight-4)%13;
             }
             results = "Straight";
+        }
+
+        if(results.equals("No Pair")) {
+
         }
         return results;
     }

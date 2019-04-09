@@ -49,7 +49,7 @@ public class HomePage extends AppCompatActivity {
     EditText nicknameTextBox;
     ImageView changePictureButton;
     Map<String, Boolean> freeSpots = new HashMap<>();
-    GameVariables gVars;
+    GameVariables gVars = new GameVariables();
     MediaPlayer mp;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,10 +62,10 @@ public class HomePage extends AppCompatActivity {
         //int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
        // decorView.setSystemUiVisibility(uiOptions);
 
+        //
         mp = MediaPlayer.create(HomePage.this, R.raw.background_music);
         mp.setLooping(true);
         mp.start();
-
         View decorView = getWindow().getDecorView();
         decorView.setOnSystemUiVisibilityChangeListener
                 (new View.OnSystemUiVisibilityChangeListener() {
@@ -91,22 +91,10 @@ public class HomePage extends AppCompatActivity {
         fromtop = AnimationUtils.loadAnimation(this, R.anim.fromtop);
         final FirebaseDatabase database = FirebaseDatabase.getInstance();
         /* Keep global variables up-to-date */
-        DatabaseReference gameVariables = database.getReference("game-1/variables");
-        gameVariables.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                gVars = dataSnapshot.getValue(GameVariables.class);
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.w("TAG", "loadPost:onCancelled", databaseError.toException());
-            }
-        });
-        DatabaseReference cardsRef = database.getReference("game-1/table-cards");
+        /*DatabaseReference cardsRef = database.getReference("game-1/table-cards");
         cardsRef.setValue(new TableCards());
 
-        /*cardsRef = database.getReference("game-1/free-spots");
+        cardsRef = database.getReference("game-1/free-spots");
         freeSpots.put("0", true);
         freeSpots.put("1", true);
         freeSpots.put("2", true);
@@ -184,62 +172,84 @@ public class HomePage extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         mp.stop();
+        mp.release();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        mp.stop();
+        //mp.stop();
+        //mp.release();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        mp.start();
+        join_button.setClickable(true);
+        //if(mp == null) mp = MediaPlayer.create(HomePage.this, R.raw.background_music);
+        //mp.setLooping(true);
+        //mp.start();
+        //mp.start();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mp.stop();
-        mp.release();
+        //mp.stop();
+        //mp.release();
     }
 
-    private void joinGame(int gameSpot) {
+    private void joinGame(final int gameSpot) {
         if(gameSpot == -1) {
             Toast.makeText(HomePage.this, "The room is full (4/4)...", Toast.LENGTH_SHORT).show();
             join_button.setClickable(true);
             return;
         }
-        if(gVars.getNumberPlayers() == gVars.getReadyPlayers() && gVars.getNumberPlayers() > 1) {
-            Toast.makeText(HomePage.this, "The game has already started, you cannot join the room!", Toast.LENGTH_SHORT).show();
-            join_button.setClickable(true);
-            return;
-        }
-        Intent myIntent = new Intent(HomePage.this, GamePage.class);
-        String nickname = nicknameTextBox.getText().toString();
-        String avatarFileName = "avatar" + Integer.toString(avatarPictureId+1);
-        PlayerVariables user;
+        final FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference gameVariables = database.getReference("game-1/variables");
+        gameVariables.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                gVars = dataSnapshot.getValue(GameVariables.class);
 
+                if(gVars.getNumberPlayers() == gVars.getReadyPlayers() && gVars.getNumberPlayers() > 1) {
+                    Toast.makeText(HomePage.this, "The game has already started, you cannot join the room!", Toast.LENGTH_SHORT).show();
+                    join_button.setClickable(true);
+                    return;
+                }
 
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference playerVariables = database.getReference("game-1/player-variables/"+Integer.toString(gameSpot));
-        DatabaseReference reference = database.getReference("game-1/free-spots");
+                Intent myIntent = new Intent(HomePage.this, GamePage.class);
+                String nickname = nicknameTextBox.getText().toString();
+                String avatarFileName = "avatar" + Integer.toString(avatarPictureId+1);
+                PlayerVariables user;
 
-        gVars.setNumberPlayers(gVars.getNumberPlayers()+1);
-        DatabaseReference gameVariables = database.getReference("game-1/variables/numberPlayers");
-        gameVariables.setValue(gVars.getNumberPlayers());
+                DatabaseReference playerVariables = database.getReference("game-1/player-variables/"+Integer.toString(gameSpot));
+                DatabaseReference reference = database.getReference("game-1/free-spots");
 
-        user = new PlayerVariables(nickname, avatarFileName);
-        playerVariables.setValue(user);
-        reference.setValue(freeSpots);
+                gVars.setNumberPlayers(gVars.getNumberPlayers()+1);
+                DatabaseReference gameVariables = database.getReference("game-1/variables/numberPlayers");
+                gameVariables.setValue(gVars.getNumberPlayers());
 
-        myIntent.putExtra("avatar", avatarFileName);
-        myIntent.putExtra("nickname", nickname);
-        myIntent.putExtra("playerSpot", gameSpot);
-        startActivity(myIntent);
+                user = new PlayerVariables(nickname, avatarFileName);
+                playerVariables.setValue(user);
+                reference.setValue(freeSpots);
+
+                myIntent.putExtra("avatar", avatarFileName);
+                myIntent.putExtra("nickname", nickname);
+                myIntent.putExtra("playerSpot", gameSpot);
+                startActivity(myIntent);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Toast.makeText(HomePage.this, "Try again...", Toast.LENGTH_SHORT).show();
+                join_button.setClickable(true);
+
+                Log.w("TAG", "loadPost:onCancelled", databaseError.toException());
+            }
+        });
+
     }
-
 
     private int checkFreeSpots() {
         for (Map.Entry<String, Boolean> entry : freeSpots.entrySet()) {
