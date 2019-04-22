@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -23,6 +24,7 @@ import java.util.Map;
 
 import classes.GameVariables;
 import classes.PlayerVariables;
+import classes.TableCards;
 
 public class HomePage extends AppCompatActivity {
     ImageView app_logo;
@@ -33,6 +35,7 @@ public class HomePage extends AppCompatActivity {
     EditText nicknameTextBox;
     ImageView changePictureButton;
     Map<String, Boolean> freeSpots = new HashMap<>();
+    Button resetDB;
     GameVariables gVars = new GameVariables();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +74,7 @@ public class HomePage extends AppCompatActivity {
         changePictureButton = findViewById(R.id.changePictureButton);
         avatarPicture = (ImageView) findViewById(R.id.avatarPicture);
         fromtop = AnimationUtils.loadAnimation(this, R.anim.fromtop);
+        resetDB = findViewById(R.id.resetDB);
         final FirebaseDatabase database = FirebaseDatabase.getInstance();
         /* Keep global variables up-to-date */
         /*DatabaseReference cardsRef = database.getReference("game-1/table-cards");
@@ -134,6 +138,39 @@ public class HomePage extends AppCompatActivity {
                 avatarPicture.setImageResource(resID);
             }
         });
+
+        resetDB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(HomePage.this, "(Debug button) DB has been reset. Please go to home page on all apps before to press.", Toast.LENGTH_SHORT).show();
+                DatabaseReference ref = database.getReference("game-1/cards");
+                ref.removeValue();
+
+                ref = database.getReference("game-1/variables");
+                ref.setValue(new GameVariables());
+
+                ref = database.getReference("game-1/table-cards");
+                ref.setValue(new TableCards());
+
+                ref = database.getReference("game-1/player-variables");
+                ref.removeValue();
+
+                ref = database.getReference("game-1/winner");
+                ref.removeValue();
+
+                ref = database.getReference("game-1/players-queue");
+                ref.removeValue();
+
+
+                Map<String, Boolean> freeAllSpots = new HashMap<>();
+                ref = database.getReference("game-1/free-spots");
+                freeAllSpots.put("0", true);
+                freeAllSpots.put("1", true);
+                freeAllSpots.put("2", true);
+                freeAllSpots.put("3", true);
+                ref.setValue(freeAllSpots);
+            }
+        });
     }
 
     @Override
@@ -190,6 +227,8 @@ public class HomePage extends AppCompatActivity {
                     join_button.setClickable(true);
                     return;
                 }
+
+
 
                 Intent myIntent = new Intent(HomePage.this, GamePage.class);
                 String nickname = nicknameTextBox.getText().toString();

@@ -1,11 +1,7 @@
 package com.example.lepti.pokerapp;
-
-
 import android.animation.Animator;
 import android.animation.AnimatorInflater;
 import android.animation.AnimatorSet;
-import android.arch.lifecycle.Lifecycle;
-import android.arch.lifecycle.ProcessLifecycleOwner;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.drawable.Drawable;
@@ -14,13 +10,10 @@ import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -155,12 +148,6 @@ public class GamePage extends AppCompatActivity {
                         }
                     }
                 });
-        //mp = MediaPlayer.create(GamePage.this, R.raw.background_music);
-        //mp.setLooping(true);
-        //mp.start();
-       // mp = MediaPlayer.create(this, R.raw.background_music);
-        //mp.setLooping(true);
-        //mp.start();
 
         userCard2View = findViewById(R.id.userCard2);
         tableCard1View = findViewById(R.id.tableCard1);
@@ -168,7 +155,6 @@ public class GamePage extends AppCompatActivity {
         tableCard3View = findViewById(R.id.tableCard3);
         tableCard4View = findViewById(R.id.tableCard4);
         tableCard5View = findViewById(R.id.tableCard5);
-        Log.d("dbg::", "phase01");
         readyBox = findViewById(R.id.readyBox);
         totalBetText = findViewById(R.id.totalBetText);
         currentBetText = findViewById(R.id.currentBetText);
@@ -180,9 +166,7 @@ public class GamePage extends AppCompatActivity {
         pMoneyText[0] = findViewById(R.id.p2MoneyText);
         pMoneyText[1] = findViewById(R.id.p3MoneyText);
         pMoneyText[2] = findViewById(R.id.p4MoneyText);
-        Log.d("dbg::", "phase011");
         readyTextId = findViewById(R.id.readyTextId);
-        Log.d("dbg::", "phase0112");
         raiseText = findViewById(R.id.raiseEditText);
         tableCardsLayout = findViewById(R.id.tableCardsLayout);
         raiseLayout = findViewById(R.id.raiseLayout);
@@ -1467,162 +1451,6 @@ public class GamePage extends AppCompatActivity {
         this.finish();
     }
 
-    /*
-    @Override
-    public void onStop() {
-        GamePage.super.onStop();
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        for (Map.Entry<String, Boolean> entry : freeSpots.entrySet()) {
-            if(entry.getKey().equals(Integer.toString(userSpot))) {
-                entry.setValue(true);
-                break;
-            }
-        }
-        gVars.setNumberPlayers(gVars.getNumberPlayers()-1);
-        gVars.setReadyPlayers(gVars.getReadyPlayers()-1);
-
-        DatabaseReference ref = database.getReference("game-1/free-spots/");
-        ref.setValue(freeSpots);
-
-        if(gVars.getNumberPlayers() == 0) { // last player in the room left
-
-            ref = database.getReference("game-1/cards");
-            ref.removeValue();
-
-            ref = database.getReference("game-1/variables");
-            ref.setValue(new GameVariables());
-
-            ref = database.getReference("game-1/table-cards");
-            ref.setValue(new TableCards());
-
-            ref = database.getReference("game-1/winner");
-            ref.removeValue();
-
-            ref = database.getReference("game-1/players-queue");
-            ref.removeValue();
-
-            gameVariablesDR.removeEventListener(gameVariablesListener);
-            playerVariablesDR.removeEventListener(playerVariablesListener);
-            tableCardVariablesDR.removeEventListener(tableCardVariablesListener);
-            gameSpotsDR.removeEventListener(gameSpotsListener);
-            cardsRefDR.removeEventListener(cardsRefListener);
-            winnersRefDR.removeEventListener(winnersRefListener);
-            pQueueRefDR.removeEventListener(pQueueRefListener);
-
-
-        }
-        else if(gVars.getNumberPlayers() == 1) { // they were two so make the last player remaining go through ready button again
-            DatabaseReference updateGlobal = database.getReference("game-1/table-cards/");
-            user.setLastRoundPlayed(8);
-            tCards.setState(7);
-            gameVariablesDR.removeEventListener(gameVariablesListener);
-            playerVariablesDR.removeEventListener(playerVariablesListener);
-            tableCardVariablesDR.removeEventListener(tableCardVariablesListener);
-            gameSpotsDR.removeEventListener(gameSpotsListener);
-            cardsRefDR.removeEventListener(cardsRefListener);
-            winnersRefDR.removeEventListener(winnersRefListener);
-            pQueueRefDR.removeEventListener(pQueueRefListener);
-            updateGlobal.setValue(tCards);
-        }
-        else {
-            if(gVars.getPlayerTurn() == userSpot+1) { // he was playing
-
-                gVars.setPlayersCompeting(gVars.getPlayersCompeting()-(int)(Math.pow(2, userSpot))); // remove the players competing
-                gVars.setOldPlayersCompeting(gVars.getOldPlayersCompeting()-(int)(Math.pow(2, userSpot)));
-                DatabaseReference updateGlobal = database.getReference("game-1/variables/");
-                Integer spot = userSpot;
-                updateGlobal.setValue(gVars);
-
-                if(nextPlayerInLine.contains(spot)) {
-                    nextPlayerInLine.remove(spot); // remove him from the queue
-                    ref = database.getReference("game-1/players-queue");
-                    ref.setValue(nextPlayerInLine);
-                }
-// if he was in a 1v1 situation
-                gameVariablesDR.removeEventListener(gameVariablesListener);
-                playerVariablesDR.removeEventListener(playerVariablesListener);
-                tableCardVariablesDR.removeEventListener(tableCardVariablesListener);
-                gameSpotsDR.removeEventListener(gameSpotsListener);
-                cardsRefDR.removeEventListener(cardsRefListener);
-                winnersRefDR.removeEventListener(winnersRefListener);
-                pQueueRefDR.removeEventListener(pQueueRefListener);
-
-                int var = 0;
-                for(int i =0; i < 3; i++) {
-                    if(isKthBitSet(gVars.getPlayersCompeting(), i+1)) var++;
-                }
-
-                // if the player was in a 1v1 situation
-                if(var == 1) {
-
-                    user.setLastRoundPlayed(8);
-                    user.setHasPlayerFolded(true);
-                    updateGlobal = database.getReference("game-1/table-cards/");
-                    tCards.setState(6);
-                    updateGlobal.setValue(tCards);
-                    // there was only one opponent
-                }
-                else {
-                    user.setHasPlayerFolded(true);
-                    switchPlayer();
-                }
-
-                // it's not a 1v1 situation
-            }
-            else { // he wasn't the only one playing
-
-                gVars.setPlayersCompeting(gVars.getPlayersCompeting()-(int)(Math.pow(2, userSpot))); // remove the players competing
-                gVars.setOldPlayersCompeting(gVars.getOldPlayersCompeting()-(int)(Math.pow(2, userSpot)));
-                DatabaseReference updateGlobal = database.getReference("game-1/variables/");
-                updateGlobal.setValue(gVars);
-                Integer spot = userSpot;
-                if(nextPlayerInLine.contains(spot)) {
-                    nextPlayerInLine.remove(spot); // remove him from the queue
-                    ref = database.getReference("game-1/players-queue");
-                    ref.setValue(nextPlayerInLine);
-                }
-// if he was in a 1v1 situation
-                gameVariablesDR.removeEventListener(gameVariablesListener);
-                playerVariablesDR.removeEventListener(playerVariablesListener);
-                tableCardVariablesDR.removeEventListener(tableCardVariablesListener);
-                gameSpotsDR.removeEventListener(gameSpotsListener);
-                cardsRefDR.removeEventListener(cardsRefListener);
-                winnersRefDR.removeEventListener(winnersRefListener);
-                pQueueRefDR.removeEventListener(pQueueRefListener);
-                int var = 0;
-                for(int i =0; i < 3; i++) {
-                    if(isKthBitSet(gVars.getPlayersCompeting(), i+1)) var++;
-                }
-
-                // if the player was in a 1v1 situation
-                if(var == 1) {
-
-                    user.setLastRoundPlayed(8);
-                    user.setHasPlayerFolded(true);
-                    updateGlobal = database.getReference("game-1/table-cards/");
-                    tCards.setState(6);
-                    updateGlobal.setValue(tCards);
-                    // there was only one opponent
-                }
-
-            }
-        }
-
-        this.finish();
-    }
-
-*/
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if(ProcessLifecycleOwner.get().getLifecycle().getCurrentState() == Lifecycle.State.CREATED) {
-            Log.d("PAUSE::", "On pause");
-        }
-
-        //mp.stop();
-       // mp.release();
-
-    }
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
@@ -1661,11 +1489,9 @@ public class GamePage extends AppCompatActivity {
 
     private boolean isPlayerCompeting(int id) {
         if (isKthBitSet(gVars.getPlayersCompeting(), id+1)) {
-            Log.d("COMPET:", "id " + Integer.toString(id) + " competing");
             return true;
         }
         else {
-            Log.d("COMPET:", "id " + Integer.toString(id) + " not competing");
             return false;
         }
     }
@@ -2691,115 +2517,6 @@ public class GamePage extends AppCompatActivity {
         else {
             results = "No Pair";
         }
-
-        /*int entryId = 0;
-        for (Map.Entry<Integer, Integer> entry : sortedMap.entrySet()) {
-            entryId++;
-            if(entry.getValue() == 4) {
-                results = "Four of a Kind";
-                allCards.remove(entry.getKey());
-
-                Set<Integer> reverseAllCards = ((TreeSet<Integer>) allCards).descendingSet();
-                Iterator<Integer> iterator;
-                iterator = reverseAllCards.iterator();
-
-                while (iterator.hasNext()) {
-                    int card = iterator.next();
-                    userBestHand[0] = entry.getKey();
-                    userBestHand[1] = entry.getKey();
-                    userBestHand[2] = entry.getKey();
-                    userBestHand[3] = entry.getKey();
-                    if(reverseAllCards.contains(0)) userBestHand[4] = 0;
-                    else userBestHand[4] = card;
-                    break;
-                }
-                break;
-            }
-            if(entry.getValue() == 3) {
-                results = "Three of a Kind";
-                if(firstRemoved < entry.getKey() && firstRemoved != 0) firstRemoved = entry.getKey();
-                if(entry.getKey() == 0) firstRemoved = entry.getKey();
-            }
-            if(( entryId == 2 || entryId == 3) && results.equals("Three of a Kind") && entry.getValue() == 2) {
-                results = "Full House";
-                allCards.remove(entry.getKey());
-                userBestHand[0] = firstRemoved;
-                userBestHand[1] = firstRemoved;
-                userBestHand[2] = firstRemoved;
-                userBestHand[3] = entry.getKey();
-                userBestHand[4] = entry.getKey();
-                break;
-            }
-            if(entry.getValue() == 2 && results.equals("One Pair")) {
-                results = "Two Pairs";
-                allCards.remove(entry.getKey());
-                userBestHand[0] = firstRemoved;
-                userBestHand[1] = firstRemoved;
-                userBestHand[2] = entry.getKey();
-                userBestHand[3] = entry.getKey();
-
-                Set<Integer> reverseAllCards = ((TreeSet<Integer>) allCards).descendingSet();
-                Iterator<Integer> iterator;
-                iterator = reverseAllCards.iterator();
-
-                while (iterator.hasNext()) {
-                    int card = iterator.next();
-                    userBestHand[4] = card;
-                    break;
-                }
-
-                break;
-            }
-            else if(entry.getValue() == 2) {
-                results = "One Pair";
-                firstRemoved = entry.getKey();
-                allCards.remove(firstRemoved);
-            }
-        }
-
-        if(results.equals("Three of a Kind")) {
-
-            allCards.remove(firstRemoved);
-            Set<Integer> reverseAllCards = ((TreeSet<Integer>) allCards).descendingSet();
-            Iterator<Integer> iterator;
-            iterator = reverseAllCards.iterator();
-
-
-            userBestHand[0] = firstRemoved;
-            userBestHand[1] = firstRemoved;
-            userBestHand[2] = firstRemoved;
-
-            int i = 3;
-            if(reverseAllCards.contains(0)) {
-                userBestHand[3] = 0;
-                i++;
-            }
-            while (iterator.hasNext() && i < 5) {
-                int card = iterator.next();
-                userBestHand[i] = card;
-                i++;
-            }
-        }
-        else if(results.equals("One Pair")) {
-
-            Set<Integer> reverseAllCards = ((TreeSet<Integer>) allCards).descendingSet();
-            Iterator<Integer> iterator;
-            iterator = reverseAllCards.iterator();
-
-
-            userBestHand[0] = firstRemoved;
-            userBestHand[1] = firstRemoved;
-
-
-            int i = 2;
-            while (iterator.hasNext() && i < 5) {
-                int card = iterator.next();
-                userBestHand[i] = card;
-                i++;
-            }
-        }
-*/
-
 
         if(highestStraightFlush == 0) {
             userBestHand[0] = 0;
